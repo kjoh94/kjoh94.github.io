@@ -108,8 +108,12 @@ The gateway starts successfully and the Telegram bot connects. The harmless warn
 
 ## Summary
 
-| Issue | Cause | Fix |
-|---|---|---|
-| `tsgo` panic | Missing bundled libs on ARM/Termux | `OPENCLAW_TS_COMPILER=tsc` |
-| `uv_interface_addresses` (onboarding) | Android restricts network interface enumeration | Patch `system-presence.ts` and `tailnet.ts` |
-| `uv_interface_addresses` (gateway) | `@homebridge/ciao` calls `os.networkInterfaces()` | `OPENCLAW_DISABLE_BONJOUR=1` |
+- **`tsgo` panic** — Missing bundled libs on ARM/Termux → `export OPENCLAW_TS_COMPILER=tsc`
+- **`uv_interface_addresses` (onboarding)** — Android restricts network interface enumeration → Patch `system-presence.ts` and `tailnet.ts`
+- **`uv_interface_addresses` (gateway)** — `@homebridge/ciao` calls `os.networkInterfaces()` → `export OPENCLAW_DISABLE_BONJOUR=1`
+
+---
+
+## Links
+
+- Source patch: [fix/termux-network-interfaces](https://github.com/kjoh94/openclaw/tree/fix/termux-network-interfaces)
