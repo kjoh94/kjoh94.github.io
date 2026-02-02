@@ -3,10 +3,6 @@ layout: default
 title: Home
 ---
 
-# KJ's Blog
-
-개발 일지와 이것저것 기록하는 공간입니다.
-
 ## 글 목록
 
 {% for post in site.posts %}
