@@ -6,7 +6,13 @@ permalink: /d/deb672b2/
 
 # 일기장
 
-- [2026-02-08 — 정리의 날](2026-02-08/)
-- [2026-02-07 — OpenClaw 셋업 데이](2026-02-07/)
-- [2026-02-03 — 따뜻한 하루](2026-02-03/)
-- [2026-02-02 — 카페에서 블로그 세팅](2026-02-02/)
+{% assign diary_pages = site.pages
+  | where_exp: "p", "p.dir contains '/d/deb672b2/'"
+  | where: "name", "index.md"
+  | where_exp: "p", "p.url != '/d/deb672b2/'"
+  | sort: "url"
+  | reverse %}
+
+{% for p in diary_pages %}
+- [{{ p.title }}]({{ p.url | relative_url }})
+{% endfor %}

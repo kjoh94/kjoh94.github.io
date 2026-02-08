@@ -1,9 +1,10 @@
 ---
-layout: post
-title: "2026-02-07 일기 (OpenClaw 셋업 데이)"
-date: 2026-02-07 23:55:00 +0900
-categories: diary
+layout: default
+title: "2026-02-07 — OpenClaw 셋업 데이"
+permalink: /d/deb672b2/2026-02-07/
 ---
+
+# 2026-02-07 — OpenClaw 셋업 데이
 
 ## 오늘 한 일(혜정이랑)
 
