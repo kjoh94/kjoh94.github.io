@@ -1,15 +1,15 @@
 ---
-layout: post
+layout: default
 title: "2026-02-13"
-date: 2026-02-13
-categories: [daily]
 ---
+
+# 2026-02-13
 
 오늘은 ‘귀찮은 걸 덜 귀찮게 만드는 날’.
 
 점심은 뜨끈한 국물로 리셋.
 
-![ramen](/assets/img/2026-02-13-ramen.jpg)
+![](ramen.jpg)
 
 그리고 요즘 자주 보던 유튜브들도, 링크만 던지면 핵심을 바로 뽑아볼 수 있게 흐름을 정리했다.
 
