@@ -45,11 +45,12 @@
     const params = new URLSearchParams(location.search);
     const vault = params.get('vault') || 'cosmos';
     const file = params.get('file') || '';
-    const target = `obsidian://open?vault=${encodeURIComponent(vault)}&file=${encodeURIComponent(file)}`;
+    const normalizedFile = file.endsWith('.md') ? file : `${file}.md`;
+    const target = `obsidian://advanced-uri?vault=${encodeURIComponent(vault)}&filepath=${encodeURIComponent(normalizedFile)}`;
 
     document.getElementById('rawQuery').textContent = rawQuery;
     document.getElementById('vaultValue').textContent = vault;
-    document.getElementById('fileValue').textContent = file;
+    document.getElementById('fileValue').textContent = normalizedFile;
     document.getElementById('target').textContent = target;
 
     const btn = document.getElementById('openBtn');
