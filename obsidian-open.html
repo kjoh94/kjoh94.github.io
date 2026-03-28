@@ -6,34 +6,57 @@
   <title>Open in Obsidian</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; line-height: 1.5; background: #111827; color: #f9fafb; }
-    .card { max-width: 720px; margin: 40px auto; background: #1f2937; border-radius: 16px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+    .card { max-width: 820px; margin: 40px auto; background: #1f2937; border-radius: 16px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
     a.btn { display: inline-block; margin-top: 12px; padding: 12px 16px; border-radius: 10px; background: #8b5cf6; color: white; text-decoration: none; font-weight: 600; }
-    code { word-break: break-all; }
+    code { word-break: break-all; white-space: pre-wrap; }
     .muted { color: #cbd5e1; font-size: 14px; }
+    .box { margin-top: 14px; padding: 12px; background: #111827; border-radius: 10px; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Obsidian 열기</h1>
-    <p id="status">Obsidian 앱으로 여는 중...</p>
-    <p class="muted">안 열리면 아래 버튼을 눌러.</p>
+    <h1>Obsidian 열기 (디버그)</h1>
+    <p id="status">자동 redirect는 잠깐 꺼둔 상태야. 아래 정보를 보고 버튼으로 열어봐.</p>
     <a id="openBtn" class="btn" href="#">Open in Obsidian</a>
-    <p class="muted">Target: <code id="target"></code></p>
+
+    <div class="box">
+      <div class="muted">Raw query string</div>
+      <code id="rawQuery"></code>
+    </div>
+
+    <div class="box">
+      <div class="muted">vault</div>
+      <code id="vaultValue"></code>
+    </div>
+
+    <div class="box">
+      <div class="muted">file (decoded)</div>
+      <code id="fileValue"></code>
+    </div>
+
+    <div class="box">
+      <div class="muted">Final target</div>
+      <code id="target"></code>
+    </div>
   </div>
 
   <script>
+    const rawQuery = location.search;
     const params = new URLSearchParams(location.search);
     const vault = params.get('vault') || 'cosmos';
     const file = params.get('file') || '';
     const target = `obsidian://open?vault=${encodeURIComponent(vault)}&file=${encodeURIComponent(file)}`;
+
+    document.getElementById('rawQuery').textContent = rawQuery;
+    document.getElementById('vaultValue').textContent = vault;
+    document.getElementById('fileValue').textContent = file;
     document.getElementById('target').textContent = target;
+
     const btn = document.getElementById('openBtn');
     btn.href = target;
 
     if (!file) {
       document.getElementById('status').textContent = 'file 파라미터가 없어.';
-    } else {
-      setTimeout(() => { window.location.href = target; }, 150);
     }
   </script>
 </body>
