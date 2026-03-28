@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open in Obsidian</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; line-height: 1.5; background: #111827; color: #f9fafb; }
+    .card { max-width: 720px; margin: 40px auto; background: #1f2937; border-radius: 16px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+    a.btn { display: inline-block; margin-top: 12px; padding: 12px 16px; border-radius: 10px; background: #8b5cf6; color: white; text-decoration: none; font-weight: 600; }
+    code { word-break: break-all; }
+    .muted { color: #cbd5e1; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Obsidian 열기</h1>
+    <p id="status">Obsidian 앱으로 여는 중...</p>
+    <p class="muted">안 열리면 아래 버튼을 눌러.</p>
+    <a id="openBtn" class="btn" href="#">Open in Obsidian</a>
+    <p class="muted">Target: <code id="target"></code></p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const vault = params.get('vault') || 'cosmos';
+    const file = params.get('file') || '';
+    const target = `obsidian://open?vault=${encodeURIComponent(vault)}&file=${encodeURIComponent(file)}`;
+    document.getElementById('target').textContent = target;
+    const btn = document.getElementById('openBtn');
+    btn.href = target;
+
+    if (!file) {
+      document.getElementById('status').textContent = 'file 파라미터가 없어.';
+    } else {
+      setTimeout(() => { window.location.href = target; }, 150);
+    }
+  </script>
+</body>
+</html>
