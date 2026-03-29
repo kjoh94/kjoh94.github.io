@@ -107,6 +107,28 @@ tags: [obsidian, telegram-bot, embeddings, search, openai, personal-knowledge]
 
 그리고 여기서 또 하나 중요했던 게 vault 이름과 opener 파라미터를 실제 환경과 정확히 맞추는 것이었다. 이 값이 어긋나면 원하는 노트가 정확히 열리지 않는다.
 
+## 실제 동작 느낌
+
+말로만 쓰면 감이 덜 오는데, 실제 사용 흐름은 아래와 같다.
+
+### 1) 텔레그램에서 자연어로 검색
+
+![텔레그램 검색 결과](/assets/img/posts/2026-03-28-obsidian-natural-search-telegram-bot/telegram-search-result.jpg)
+
+검색 결과는 경로 중심으로 짧게 보여주고, 각 결과를 누르면 GitHub Pages opener 링크로 넘어간다.
+
+### 2) opener 링크 확인 후 열기
+
+![링크 열기 확인](/assets/img/posts/2026-03-28-obsidian-natural-search-telegram-bot/open-link-confirm.jpg)
+
+Telegram 안에서는 `obsidian://` 커스텀 스킴을 바로 다루기 까다로워서, 중간에 HTTPS opener 페이지를 두는 방식이 훨씬 안정적이었다.
+
+### 3) 최종적으로 Obsidian 노트가 정확히 열림
+
+![Obsidian 노트 열린 화면](/assets/img/posts/2026-03-28-obsidian-natural-search-telegram-bot/obsidian-note-opened.jpg)
+
+결과적으로는 **텔레그램 검색 → 링크 클릭 → Obsidian 특정 노트 열기** 흐름이 실제로 매끄럽게 이어진다. 이 부분이 되면서 비로소 “검색 데모”가 아니라 “매일 쓸 수 있는 개인 검색도구” 느낌이 살아났다.
+
 ## 지금 상태
 
 지금은 다음이 된다.
