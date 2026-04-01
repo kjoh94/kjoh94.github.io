@@ -22,7 +22,7 @@
 
   <script>
     const params = new URLSearchParams(location.search);
-    const vault = params.get('vault') || 'mycosmos';
+    const vault = params.get('vault') || 'cosmos';
     const file = params.get('file') || '';
     const normalizedFile = file.endsWith('.md') ? file : `${file}.md`;
     const target = `obsidian://advanced-uri?vault=${encodeURIComponent(vault)}&filepath=${encodeURIComponent(normalizedFile)}`;
