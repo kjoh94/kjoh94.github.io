@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "자율주행 AI가 4.7배 빨라진 이유: FlashDrive 논문 쉽게 읽기"
-date: 2026-10-17 13:00:00 +0900
+date: 2026-10-17 12:45:00 +0900
 categories: [ai, paper, on-device]
 tags: [flashdrive, vla, autonomous-driving, inference-optimization, quantization, speculative-decoding, kv-cache]
 ---
