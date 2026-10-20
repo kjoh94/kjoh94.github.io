@@ -6,15 +6,9 @@ categories: [gpu, cuda, tutorial]
 tags: [runpod, cuda, nvcc, pytorch, gpu, beginner, cloud-gpu]
 ---
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/U2VZT2jFJgo" title="RunPod CUDA 맛보기" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
 내 컴퓨터에 GPU가 없어도 CUDA는 써 볼 수 있다. 클라우드 GPU를 몇 분만 빌리면 된다. 이번에는 RunPod에서 GPU 하나를 켜고, 첫 CUDA 프로그램을 컴파일해서 CPU와 속도를 비교하고, 초보자가 자주 하는 실수 두 가지까지 직접 겪어 봤다. 실제로 돌린 시간은 2분 남짓, 비용은 약 2센트였다.
 
 - 코드: <https://github.com/kjoh94/runpod-cuda-taster>
-- 영상 (한국어 본편): <https://youtu.be/U2VZT2jFJgo>
-- 영상 (한국어 Shorts): <https://youtube.com/shorts/LihhVYCMQJM>
-- Video (English full tutorial): <https://youtu.be/3bGNNVeXUiQ>
-- Video (English Shorts): <https://youtube.com/shorts/VeQC7OlXWLc>
 
 ## 결과부터
 
