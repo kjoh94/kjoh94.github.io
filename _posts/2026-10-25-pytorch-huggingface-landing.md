@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "PyTorch로 학습한 모델은 어떻게 허깅페이스에 '착륙'하는가"
-date: 2026-10-25 19:15:00 +0900
+date: 2026-10-25 19:40:00 +0900
 categories: [ml, huggingface, tutorial]
 tags: [pytorch, huggingface, safetensors, gguf, unsloth, qwen, transformers, onnx]
 ---
@@ -42,6 +42,9 @@ HF 방식은 그 중간이다. 설명서를 **아주 짧은 메모**(`config.jso
 
 이 감각이 이 글 전체의 열쇠다.
 
+![세 가지 포장법](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig01.jpg)
+*그림 1. 같은 '레고 작품'을 포장하는 세 가지 방법. **PyTorch**는 설계도(Python 클래스)와 블록 상자(`.pt` state_dict)를 따로 들고 다닌다. **ONNX**는 그래프와 가중치를 `model.onnx` 한 상자에 밀봉한다. **Hugging Face**는 설계도를 `config.json` 메모 한 장으로 줄이고, 설계도 본체는 모두가 이미 가진 공용 책 `transformers`(예: `modeling_qwen2.py`)에 맡긴 채 블록만 safetensors로 보낸다.*
+
 ---
 
 ## 2. 학습 → 로컬 저장: 무엇이 디스크에 떨어지는가
@@ -62,6 +65,9 @@ torch.save(model, "whole.pt")                        # (C) 객체 통째로 (pic
 
 여기서 중요한 사실이 하나 있다. `.pt`/`.bin`은 내부적으로 **pickle**을 쓴다. pickle은 로드할 때 임의의 Python 코드를 실행할 수 있다. 남이 올린 파일을 열면 남의 코드가 내 컴퓨터에서 돈다는 뜻이다. 이 사실은 3장에서 다시 등장한다.
 
+![torch.save 세 가지](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig02.jpg)
+*그림 2. `torch.save`로 떨어뜨릴 수 있는 세 가지. **(A)** 이름→텐서 사전인 state_dict(구조 없음), **(B)** 옵티마이저 상태·epoch까지 담은 학습 재개용 체크포인트, **(C)** 클래스 객체를 통째로 pickle한 것(원래 코드가 같은 경로에 없으면 안 열림). 아래 빨간 줄이 핵심이다: `.pt`/`.bin`은 pickle이라 로드하는 순간 임의 코드가 실행될 수 있다.*
+
 ### 2.2 transformers 방식: `save_pretrained`
 
 HF 생태계에서는 이렇게 저장한다.
@@ -81,11 +87,20 @@ tokenizer.save_pretrained("my-model/")
 | `tokenizer.json`, `tokenizer_config.json` | 토크나이저와 채팅 템플릿 | 글자를 블록 번호로 바꾸는 사전 |
 | `vocab.json`, `merges.txt` | BPE 토크나이저 원재료(모델에 따라 다름) | 사전의 원본 |
 
+![save_pretrained 폴더](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig03.jpg)
+*그림 3. `save_pretrained` 결과 폴더의 트리. 파란 `config.json`이 아키텍처 메모, 금색 `model.safetensors`가 실제 가중치, 초록 두 파일이 토크나이저와 채팅 템플릿이다. 가중치 말고는 전부 작은 텍스트 파일이라는 점을 눈여겨보자.*
+
 `config.json` 안의 `"model_type": "qwen2"`와 `"architectures": ["Qwen2ForCausalLM"]`를 보고 `AutoModelForCausalLM.from_pretrained(...)`가 **어느 Python 클래스를 쓸지** 고른다. 클래스 본체는 `transformers` 패키지 안의 `modeling_qwen2.py`에 있다.
 
 **새 아키텍처라서 아직 `transformers`에 없다면?** 레포에 `modeling_xxx.py` 같은 코드를 직접 넣고, 사용자가 `trust_remote_code=True`로 불러오게 한다. 공용 책에 아직 실리지 않은 설계도를 상자에 같이 넣어 보내는 셈이다. 그래서 이 옵션은 "이 레포의 코드를 실행해도 된다"는 동의다.
 
+![from_pretrained 클래스 선택](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig04.jpg)
+*그림 4. `AutoModelForCausalLM.from_pretrained`의 디스패치. `config.json`의 `architectures`/`model_type`을 읽고 `transformers` 안에서 `modeling_qwen2.py`의 `Qwen2ForCausalLM`을 골라 그 위에 가중치를 붓는다. 공용 책에 아직 없는 구조면 레포 안의 `modeling_xxx.py`를 실행해야 하고, `trust_remote_code=True`가 그 동의다.*
+
 **토크나이저가 왜 꼭 필요할까?** 모델은 숫자만 먹는다. "안녕"을 `[12345, 678]`로 바꾸는 규칙이 다르면 가중치가 같아도 엉뚱한 말을 한다. 그리고 `tokenizer_config.json` 안에 **chat_template**(Jinja 템플릿)이 들어 있다. Qwen2.5 Instruct라면 `<|im_start|>user ... <|im_end|>` 같은 대화 포맷이 여기에 정의돼 있다. 이 템플릿이 맞지 않으면 Instruct 모델이 바보가 된다.
+
+![토크나이저와 채팅 템플릿](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig05.jpg)
+*그림 5. 위: 문자열 "안녕"이 `tokenizer.json` 규칙으로 토큰 id `[12345, 678]`가 되어야 모델이 먹을 수 있다. 아래: `tokenizer_config.json`의 chat_template이 만드는 Qwen식 대화 포맷. Instruct 모델은 학습 때 이 포맷만 봤기 때문에 템플릿이 어긋나면 품질이 무너진다.*
 
 ---
 
@@ -109,6 +124,9 @@ JSON 헤더에는 `"model.layers.0.self_attn.q_proj.weight": {"dtype":"BF16","sh
 3. **프레임워크 중립**: PyTorch, JAX, NumPy 등에서 읽을 수 있다.
 
 최근 버전의 `save_pretrained`는 기본으로 safetensors를 쓴다.
+
+![safetensors 바이트 구조](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig06.jpg)
+*그림 6. safetensors 파일을 바이트 순서대로 펼친 그림. 맨 앞 8바이트(빨강)가 헤더 길이 N, 그다음 N바이트(금색)가 JSON 헤더, 나머지가 텐서 원시 바이트다. 헤더의 `data_offsets: [a, b]`가 텐서 데이터 구간을 직접 가리키므로, 헤더만 읽으면 mmap으로 원하는 텐서만 바로 매핑할 수 있다. 코드 실행은 없다.*
 
 > 주의: safetensors는 **가중치만** 담는다. ONNX처럼 그래프가 들어 있지 않다. 구조는 여전히 `config.json`과 `transformers` 코드가 맡는다.
 
@@ -150,6 +168,9 @@ vocab.json
 
 "이 텐서는 몇 번 상자에 있다"는 지도다. 로더는 목차를 먼저 읽고 필요한 상자만 연다. 이 레포의 파라미터는 약 76억 개(BF16)이고, 저장 용량은 약 15GB다.
 
+![샤딩과 index.json](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig07.jpg)
+*그림 7. `model.safetensors.index.json`의 `weight_map`이 텐서 이름마다 "몇 번 샤드에 있는지"를 적어 둔 목차다. 로더는 목차를 먼저 읽고 필요한 샤드만 연다. Qwen2.5-7B-Instruct는 약 15GB를 4조각으로 나눴다.*
+
 ### 🥉 3위: `pytorch_model.bin`, 옛 표준
 
 safetensors 이전의 기본값이다. 사실상 `torch.save(state_dict)` 결과물이고 pickle 기반이다. 샤딩되면 `pytorch_model-00001-of-0000N.bin`과 `pytorch_model.bin.index.json` 형태가 된다. 오래된 레포에서 자주 보인다. HF는 이런 레포를 safetensors로 변환하라고 권장하고, 변환 PR 봇도 돌렸다.
@@ -164,6 +185,9 @@ safetensors 이전의 기본값이다. 사실상 `torch.save(state_dict)` 결과
 - **MLX** (Apple Silicon용, `mlx-community` 같은 조직): 이것도 safetensors를 쓰지만 MLX 레이아웃이다.
 
 한 줄 요약: **HF에서 "모델"이라고 하면 90%는 `config.json` + 토크나이저 + safetensors(샤드) 조합**이다. 나머지는 특정 런타임을 위한 변환본이다.
+
+![HF 포맷 순위](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig08.jpg)
+*그림 8. Files 탭에서 보이는 빈도를 막대 길이로 그린 개념도(정확한 통계 아님). safetensors와 샤드가 대부분이고, `pytorch_model.bin`은 옛 레포, ONNX·OpenVINO·MLX는 런타임별 변환본, TensorRT 엔진은 GPU·버전에 묶여 보통 직접 빌드한다.*
 
 ---
 
@@ -187,6 +211,9 @@ safetensors가 **블록 상자**라면 GGUF는 **ONNX처럼 한 파일에 거의
 
 그래서 `.gguf` 파일 하나만 있으면 llama.cpp가 바로 돌린다. `config.json`도 `tokenizer.json`도 필요 없다. 계산 그래프 자체는 파일에 없다. llama.cpp 코드가 아키텍처 이름을 보고 그래프를 직접 만든다. 이 점에서 HF 방식(메모 + 공용 책)과 철학이 같다. 공용 책이 `transformers` 대신 `llama.cpp`일 뿐이다.
 
+![HF 폴더 vs GGUF](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig09.jpg)
+*그림 9. 왼쪽 HF 폴더는 메모·사전·가중치가 여러 파일로 흩어져 있고 `transformers` 코드가 따로 필요하다. 오른쪽 `.gguf`는 한 파일 안에 magic/버전 → 메타데이터 KV(arch, 층 수, 컨텍스트, RoPE) → 토크나이저·채팅 템플릿 → 양자화 텐서 순으로 들어 있다. 계산 그래프는 없고 llama.cpp가 arch 이름을 보고 직접 만든다.*
+
 ### 4.3 파일 이름에 붙는 암호: Q4_K_M 같은 것
 
 GGUF 레포에는 보통 같은 모델이 **양자화 수준별로 여러 파일** 들어 있다.
@@ -204,6 +231,9 @@ Qwen2.5-7B-Instruct-Q8_0.gguf
 - `F16`/`BF16`: 양자화하지 않은 원본 정밀도
 
 직관적으로는 해상도가 다른 JPEG 여러 장과 비슷하다. 원본 사진(BF16)은 하나인데, 용량과 화질을 맞바꾼 버전을 골라 받는다.
+
+![GGUF 양자화 수준](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig10.jpg)
+*그림 10. 같은 7B 모델의 양자화 수준별 파일 크기 감각(대략치). BF16 약 15GB에서 Q4_K_M은 약 4.7GB로 줄어든다. 오른쪽은 이름 읽는 법: 숫자 = 대략 비트 수, K = k-quant, `_S/_M/_L` = 중요 텐서에 비트를 더 주는 변형.*
 
 ### 4.4 누가 만드는가
 
@@ -251,7 +281,13 @@ model = FastLanguageModel.get_peft_model(model, r=16, ...)   # LoRA 부착
 
 **LoRA 직관**: 거대한 가중치 행렬 W(예: 3584×3584)는 그대로 얼린다. 옆에 아주 얇은 두 행렬 A(3584×16)와 B(16×3584)를 붙여 `W + BA`로 쓴다. 학습되는 건 얇은 A, B뿐이다. 그래서 어댑터 파일은 수십~수백 MB로 작다. 대신 쓸 때는 **베이스 모델이 꼭 필요**하다. `adapter_config.json` 안의 `base_model_name_or_path`가 "어떤 원본 위에 붙이는지"를 가리킨다.
 
+![LoRA 행렬](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig11.jpg)
+*그림 11. LoRA의 모양. 3584×3584 W(파랑)는 얼려 두고, 3584×16 B와 16×3584 A(금색)만 학습한다. 그래서 어댑터 파일은 작지만, 쓸 때는 `base_model_name_or_path`가 가리키는 베이스 모델이 꼭 있어야 한다.*
+
 **병합(merge)**: `W' = W + BA`를 실제로 계산해서 새 W'를 저장한다. 이제 혼자서도 돌아가는 일반 모델 레포가 된다. 그래서 GGUF, ONNX 변환도 이 병합본에서 출발한다.
+
+![Unsloth 세 갈래](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig12.jpg)
+*그림 12. Unsloth 학습 뒤의 세 출구. `push_to_hub`는 어댑터 두 파일만, `push_to_hub_merged`는 W'=W+BA를 계산한 독립 모델 레포를, `push_to_hub_gguf`는 llama.cpp/Ollama용 완제품을 올린다.*
 
 ---
 
@@ -285,6 +321,9 @@ Qwen2.5 시절의 공식 레포 패턴은 이랬다.
 
 모델 페이지 오른쪽의 "Quantizations", "Finetunes", "Adapters", "Merges" 숫자가 바로 이 가계도다.
 
+![공개일 4막](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig13.jpg)
+*그림 13. 대형 모델 공개를 4막으로 그린 타임라인. 내부 학습(비공개) → HF 포맷 정리(transformers PR, 샤드, 모델카드) → 발표 시각 공식 레포 public 전환(Base·Instruct·공식 양자화본) → 몇 시간~며칠 안에 커뮤니티의 GGUF·MLX·ONNX·LoRA 파도.*
+
 ### 양자화 포맷 한눈에
 
 | 포맷 | 주 런타임 | 파일 모양 | 주로 누가 |
@@ -296,37 +335,15 @@ Qwen2.5 시절의 공식 레포 패턴은 이랬다.
 | ONNX | ONNX Runtime, Transformers.js | `.onnx` (+ `_data`) | Optimum, 커뮤니티 |
 | MLX | Apple MLX | safetensors (MLX 레이아웃) | mlx-community |
 
+![포맷 지도](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig14.jpg)
+*그림 14. 표를 한 장으로: 포맷마다 어느 런타임이 먹고, 주로 누가 올리는지.*
+
 ---
 
 ## 7. 전체 그림 한 장
 
-```mermaid
-flowchart LR
-  A[PyTorch 학습<br/>nn.Module + optimizer] --> B[내부 체크포인트<br/>.pt / 분산 샤드]
-  B --> C[save_pretrained<br/>config.json + tokenizer + safetensors 샤드 + index.json]
-  C --> D[push_to_hub / upload_folder<br/>org/Model-Base, org/Model-Instruct]
-  D --> E1[GGUF<br/>convert_hf_to_gguf + llama-quantize]
-  D --> E2[AWQ / GPTQ<br/>GPU 서빙용 4bit]
-  D --> E3[ONNX / OpenVINO / MLX<br/>런타임별 변환]
-  D --> F[Unsloth/PEFT 파인튜닝]
-  F --> G1[LoRA 어댑터 레포<br/>adapter_model.safetensors]
-  F --> G2[병합 모델 레포<br/>push_to_hub_merged]
-  F --> G3[파인튜닝 GGUF<br/>push_to_hub_gguf]
-```
-
-ASCII 버전:
-
-```
-[PyTorch 학습] -> [.pt 체크포인트] -> save_pretrained -> [config + tokenizer + *.safetensors]
-                                                                  |
-                                                            push_to_hub
-                                                                  v
-                                                     HF: Org/Model(-Instruct)
-                         .-----------------+---------------+------+---------------.
-                         v                 v               v                      v
-                     GGUF(llama.cpp)   AWQ/GPTQ(vLLM)   ONNX/MLX         Unsloth/PEFT 파인튜닝
-                                                                       (어댑터 | 병합 | GGUF)
-```
+![전체 그림](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig15.jpg)
+*그림 15. PyTorch 학습 → 내부 체크포인트 → `save_pretrained`(config + tokenizer + safetensors + index) → `push_to_hub`로 허브의 공식 레포 → 오른쪽으로 GGUF·AWQ/GPTQ·ONNX/OV/MLX 변환본, 아래로 Unsloth/PEFT 파인튜닝과 그 세 출구(어댑터·병합·GGUF).*
 
 ---
 
@@ -342,5 +359,8 @@ ASCII 버전:
 - HF는 설계도가 짧은 메모 + 공용 책(`transformers`), 블록은 safetensors다.
 - ONNX는 설계도와 블록을 한 상자에 담는다.
 - GGUF는 메모와 사전과 압축 블록을 한 상자에 담고, 설계도 본체는 llama.cpp가 갖는다.
+
+![네 줄 요약](/assets/img/posts/2026-10-25-pytorch-huggingface-landing/fig16.jpg)
+*그림 16. 이 글 전체를 네 줄로: 설계도는 어디에, 블록은 어디에.*
 
 이 네 줄이 머리에 남으면, 다음에 새 모델이 공개되는 날 Files 탭을 열었을 때 파일 하나하나가 왜 거기 있는지 읽힐 것이다.
