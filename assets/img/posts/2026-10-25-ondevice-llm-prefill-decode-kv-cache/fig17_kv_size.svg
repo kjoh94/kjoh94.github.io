@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" font-family="Pretendard, 'Noto Sans KR', sans-serif">
+<rect width="960" height="360" fill="#f4f6f8"/>
+<text x="480" y="40" text-anchor="middle" font-size="24" font-weight="700" fill="#222">KV 캐시 크기 (예시 숫자)</text>
+<text x="480" y="85" text-anchor="middle" font-size="18" fill="#333">2(K,V) × 레이어 × KV헤드 × head_dim × 토큰 길이 × 바이트</text>
+<text x="480" y="115" text-anchor="middle" font-size="15" fill="#666">예: 2 × 24 × KV헤드 × 128 × 4096 × 2바이트(FP16)</text>
+<text x="60" y="175" font-size="16" fill="#333">MHA · KV헤드 16</text>
+<rect x="250" y="155" width="600" height="34" rx="6" fill="#9aa9b8"/><text x="860" y="178" font-size="16" font-weight="700" fill="#333">≈ 805MB</text>
+<text x="60" y="235" font-size="16" fill="#333">GQA · KV헤드 8</text>
+<rect x="250" y="215" width="300" height="34" rx="6" fill="#d9472b"/><text x="560" y="238" font-size="16" font-weight="700" fill="#a8321b">≈ 403MB</text>
+<text x="60" y="295" font-size="16" fill="#333">MQA · KV헤드 1</text>
+<rect x="250" y="275" width="38" height="34" rx="6" fill="#5b7a99"/><text x="298" y="298" font-size="16" font-weight="700" fill="#333">≈ 50MB</text>
+<text x="480" y="345" text-anchor="middle" font-size="13" fill="#777">토큰 길이가 2배가 되면 막대도 2배 — 폰에서는 이 메모리가 바로 부담</text>
+</svg>

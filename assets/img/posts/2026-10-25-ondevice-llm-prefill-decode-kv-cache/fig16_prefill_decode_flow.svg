@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" font-family="Pretendard, 'Noto Sans KR', sans-serif">
+<rect width="960" height="400" fill="#f4f6f8"/>
+<text x="480" y="40" text-anchor="middle" font-size="24" font-weight="700" fill="#222">Prefill(읽기) → Decode(쓰기) 흐름</text>
+<rect x="40" y="90" width="300" height="120" rx="14" fill="#dfe6ee" stroke="#5b7a99" stroke-width="2"/>
+<text x="190" y="125" text-anchor="middle" font-size="20" font-weight="700" fill="#2f4b66">Prefill</text>
+<text x="190" y="155" text-anchor="middle" font-size="15" fill="#333">질문 N토큰을 한꺼번에</text>
+<text x="190" y="180" text-anchor="middle" font-size="15" fill="#333">큰 행렬곱 · 연산이 병목</text>
+<g fill="#ffffff" stroke="#888"><rect x="70" y="230" width="34" height="34" rx="6"/><rect x="110" y="230" width="34" height="34" rx="6"/><rect x="150" y="230" width="34" height="34" rx="6"/><rect x="190" y="230" width="34" height="34" rx="6"/><rect x="230" y="230" width="34" height="34" rx="6"/><rect x="270" y="230" width="34" height="34" rx="6"/></g>
+<text x="190" y="290" text-anchor="middle" font-size="14" fill="#555">모든 토큰 동시에 처리 → 첫 토큰(TTFT)</text>
+<rect x="390" y="300" width="180" height="70" rx="10" fill="#e9ecef" stroke="#777" stroke-width="2"/>
+<text x="480" y="332" text-anchor="middle" font-size="18" font-weight="700" fill="#333">KV 캐시</text>
+<text x="480" y="356" text-anchor="middle" font-size="13" fill="#555">K·V 저장 / 재사용</text>
+<path d="M340 150 L610 150" stroke="#555" stroke-width="3" marker-end="url(#a)"/>
+<path d="M260 268 Q300 335 388 335" stroke="#5b7a99" stroke-width="2.5" fill="none" marker-end="url(#a)"/>
+<path d="M700 210 Q700 335 572 335" stroke="#d9472b" stroke-width="2.5" fill="none" marker-end="url(#r)"/>
+<rect x="620" y="90" width="300" height="120" rx="14" fill="#fbe3dd" stroke="#d9472b" stroke-width="2"/>
+<text x="770" y="125" text-anchor="middle" font-size="20" font-weight="700" fill="#a8321b">Decode (반복)</text>
+<text x="770" y="155" text-anchor="middle" font-size="15" fill="#333">새 토큰 1개씩</text>
+<text x="770" y="180" text-anchor="middle" font-size="15" fill="#333">가중치 전체 읽기 · 메모리가 병목</text>
+<path d="M880 90 C930 40 960 160 922 160" stroke="#d9472b" stroke-width="2" fill="none" marker-end="url(#r)"/>
+<rect x="760" y="230" width="34" height="34" rx="6" fill="#d9472b"/>
+<text x="840" y="290" text-anchor="middle" font-size="14" fill="#555">한 번에 한 토큰 (tokens/s)</text>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#555"/></marker><marker id="r" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#d9472b"/></marker></defs>
+</svg>
