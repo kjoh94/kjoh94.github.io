@@ -86,7 +86,7 @@ print(torch._C._dispatch_has_kernel_for_dispatch_key("aten::add.Tensor", "Privat
 ```python
 from torch.utils._pytree import tree_map
 
-SUPPORTED = {"aten.add.Tensor", "aten.mul.Tensor", "aten.mm.default", "aten.t.default",
+SUPPORTED = {"aten.add.Tensor", "aten.gelu.default", "aten.native_layer_norm.default", "aten.mul.Tensor", "aten.mm.default", "aten.t.default",
              "aten.addmm.default", "aten.relu.default", "aten.detach.default"}
 stats = {"device": 0, "fallback": 0}
 
@@ -146,7 +146,7 @@ class OpCount(TorchDispatchMode):
 model = torch.nn.Sequential(torch.nn.Linear(32, 64), torch.nn.GELU(), torch.nn.LayerNorm(64),
                             torch.nn.Linear(64, 10), torch.nn.Softmax(-1)).eval()
 inp = torch.randn(2, 32)
-with torch.inference_mode(), OpCount() as oc:
+with torch.no_grad(), OpCount() as oc:
     model(inp)
 # 참고: nn.TransformerEncoderLayer 는 추론 시 '_transformer_encoder_layer_fwd' 같은
 # 융합 op 하나로 내려가기도 한다 — 백엔드 입장에선 그 op도 커버하거나 분해시켜야 한다
