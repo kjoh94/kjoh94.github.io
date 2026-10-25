@@ -38,4 +38,6 @@ PyTorch를 "쓸 줄 아는" 단계에서 "**안에서 무슨 일이 일어나는
 - [TensorRT 추론 기초](/blog/2026/10/25/tensorrt-inference-basics/) — 8장(ONNX) 이후 실전 배포 예.
 - [On-Device LLM: Prefill·Decode·KV 캐시](/blog/2026/10/25/ondevice-llm-prefill-decode-kv-cache/) — 11장의 개념편.
 
+예제 코드 저장소: <https://github.com/kjoh94/pytorch-series-examples> (장별 폴더, `python example.py`).
+
 모든 예제는 공개된 PyTorch 2.x(작성 시점 2.14 CPU 빌드에서 확인) 기준이다.

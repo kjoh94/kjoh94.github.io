@@ -9,6 +9,8 @@ tags: [pytorch, tensor, stride, view, contiguous, dtype, device, pytorch-series]
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > → 다음: [2. nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/)
 
+> 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/01-tensor](https://github.com/kjoh94/pytorch-series-examples/tree/main/01-tensor) (`python example.py`)
+
 PyTorch를 오래 써도 `RuntimeError: view size is not compatible with input tensor's size and stride` 같은 에러를 만나면 막막하다. 원인은 거의 항상 하나다. **텐서가 "숫자 상자"가 아니라 "메모리를 읽는 규칙"이라는 것**을 놓쳤기 때문이다. 이 장은 시리즈 전체의 바닥이다. 뒤에 나올 ATen, `torch.compile`, `torch.export`, ONNX, 양자화가 모두 여기서 정의하는 여섯 개 필드(storage, shape, stride, offset, dtype, device)로 이야기한다.
 
 모든 예제는 CPU 하나로 돌아간다. `pip install torch` 후 그대로 복사해서 실행해 보자.
@@ -231,8 +233,8 @@ describe("contig", x.permute(2, 0, 1).contiguous())
 
 다음 장에서는 이 텐서들이 **모델의 파라미터**로 어떻게 묶이고, `state_dict`라는 이름표 사전으로 저장·로드되는지 본다.
 
+
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > → 다음: [2. nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/)
-
