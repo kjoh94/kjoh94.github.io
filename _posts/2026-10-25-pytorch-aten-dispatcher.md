@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "ATen이란? PyTorch가 NPU 커널을 고르는 방식"
-date: 2026-10-25 21:00:00 +0900
+date: 2026-10-25 20:05:00 +0900
 categories: [pytorch, aten]
 tags: [aten, dispatcher, PrivateUse1, NPU, pytorch]
 ---
