@@ -34,7 +34,6 @@ PyTorch를 "쓸 줄 아는" 단계에서 "**안에서 무슨 일이 일어나는
 ## 함께 읽으면 좋은 글
 
 - [PyTorch로 학습한 모델은 어떻게 허깅페이스에 '착륙'하는가](/blog/2026/10/25/pytorch-huggingface-landing/) — 2장(state_dict) 다음에 읽으면 좋은 **번외편**. safetensors·config·GGUF까지.
-- [ATen이란? (초기 정리본)](/blog/2026/10/25/pytorch-aten-dispatcher/) — 4장의 바탕이 된 첫 정리.
 - [TensorRT 추론 기초](/blog/2026/10/25/tensorrt-inference-basics/) — 8장(ONNX) 이후 실전 배포 예.
 - [On-Device LLM: Prefill·Decode·KV 캐시](/blog/2026/10/25/ondevice-llm-prefill-decode-kv-cache/) — 11장의 개념편.
 

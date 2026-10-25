@@ -12,7 +12,7 @@ tags: [pytorch, aten, dispatcher, dispatch-key, meta, pytorch-series]
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/04-aten-dispatcher](https://github.com/kjoh94/pytorch-series-examples/tree/main/04-aten-dispatcher) (`python example.py`)
 
-같은 `torch.mm(a, b)`가 CPU 텐서면 CPU 행렬곱을, CUDA 텐서면 GPU 행렬곱을 부른다. 누가 고르는 걸까? 답은 **ATen**(PyTorch의 C++ 텐서 연산 라이브러리)과 그 안의 **Dispatcher**(op 이름 → 커널 라우터)다. 이 장은 [초기 정리본](/blog/2026/10/25/pytorch-aten-dispatcher/)을 시리즈 형식으로 다시 풀어 쓴 것이다. 5장(새 장치 꽂기), 6–7장(그래프 캡처·export), 12장(커스텀 op)이 모두 이 구조 위에 있으니 시리즈에서 가장 중요한 장이라고 해도 좋다.
+같은 `torch.mm(a, b)`가 CPU 텐서면 CPU 행렬곱을, CUDA 텐서면 GPU 행렬곱을 부른다. 누가 고르는 걸까? 답은 **ATen**(PyTorch의 C++ 텐서 연산 라이브러리)과 그 안의 **Dispatcher**(op 이름 → 커널 라우터)다. 5장(새 장치 꽂기), 6–7장(그래프 캡처·export), 12장(커스텀 op)이 모두 이 구조 위에 있으니 시리즈에서 가장 중요한 장이라고 해도 좋다.
 
 ## 1. 큰 그림
 
