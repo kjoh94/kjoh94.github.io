@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "TensorRT 추론 기초 — ONNX부터 엔진 빌드, 실행까지"
-date: 2026-10-25 18:30:00 +0900
+date: 2026-10-25 17:00:00 +0900
 categories: [gpu, tensorrt, tutorial]
 tags: [tensorrt, onnx, cuda, inference, fp16, int8, resnet18, pytorch]
 ---
