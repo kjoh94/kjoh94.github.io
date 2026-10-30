@@ -7,7 +7,10 @@ tags: [pytorch, tensor, stride, view, contiguous, dtype, device, pytorch-series]
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
+> ← 이전: [기초편 C](/blog/2026/10/31/pytorch-00c-loss-train-loop/)  
 > → 다음: [2. nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/)
+
+> **처음이신가요?** 이 장은 텐서의 메모리 내부를 다뤄요. 텐서·신경망이 처음이라면 [기초편 A. 텐서를 숫자 상자로](/blog/2026/10/31/pytorch-00a-tensor-numbers/) → [B. Linear와 순전파](/blog/2026/10/31/pytorch-00b-linear-forward/) → [C. loss와 학습 루프](/blog/2026/10/31/pytorch-00c-loss-train-loop/)를 먼저 읽고 오면 훨씬 쉬워요.
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/01-tensor](https://github.com/kjoh94/pytorch-series-examples/tree/main/01-tensor) (`python example.py`)
 
