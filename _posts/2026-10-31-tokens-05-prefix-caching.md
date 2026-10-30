@@ -1,4 +1,5 @@
 ---
+permalink: /blog/2026/10/31/tokens-05-prefix-caching/
 layout: post
 title: "Prefix 재사용: 같은 앞부분은 한 번만 읽기"
 date: 2026-10-31 05:08:00 +0900

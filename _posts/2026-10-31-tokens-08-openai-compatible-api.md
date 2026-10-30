@@ -1,4 +1,5 @@
 ---
+permalink: /blog/2026/10/31/tokens-08-openai-compatible-api/
 layout: post
 title: "OpenAI 호환 API: 콘센트 규격 맞추기"
 date: 2026-10-31 05:32:00 +0900

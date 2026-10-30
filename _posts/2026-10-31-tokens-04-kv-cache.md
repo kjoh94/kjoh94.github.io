@@ -1,4 +1,5 @@
 ---
+permalink: /blog/2026/10/31/tokens-04-kv-cache/
 layout: post
 title: "KV 캐시: 이미 읽은 토큰을 다시 계산하지 않는 메모"
 date: 2026-10-31 05:00:00 +0900

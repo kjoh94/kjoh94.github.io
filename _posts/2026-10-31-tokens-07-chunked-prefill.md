@@ -1,4 +1,5 @@
 ---
+permalink: /blog/2026/10/31/tokens-07-chunked-prefill/
 layout: post
 title: "청크 Prefill: 긴 입력을 잘라 사이사이에 끼우기"
 date: 2026-10-31 05:24:00 +0900

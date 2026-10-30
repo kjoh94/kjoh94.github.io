@@ -1,4 +1,5 @@
 ---
+permalink: /blog/2026/10/31/tokens-06-continuous-batching/
 layout: post
 title: "연속 배치: 여러 사람의 바퀴를 한 번에 돌리기"
 date: 2026-10-31 05:16:00 +0900

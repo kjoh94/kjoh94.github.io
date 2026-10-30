@@ -1,4 +1,5 @@
 ---
+permalink: /blog/2026/10/31/tokens-09-streaming/
 layout: post
 title: "스트리밍: 토큰이 나오는 대로 바로 보내기"
 date: 2026-10-31 05:40:00 +0900

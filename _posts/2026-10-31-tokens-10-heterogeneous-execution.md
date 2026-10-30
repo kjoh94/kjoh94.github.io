@@ -1,4 +1,5 @@
 ---
+permalink: /blog/2026/10/31/tokens-10-heterogeneous-execution/
 layout: post
 title: "CPU와 가속기 분담: 일을 어디서 할지 나누기"
 date: 2026-10-31 06:48:00 +0900
