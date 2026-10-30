@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "복잡한 에이전트 메모리, 꼭 필요할까? — RAW-RAG가 보여 준 단순 RAG의 힘"
-date: 2026-10-30 10:00:00 +0900
+date: 2026-10-30 09:00:00 +0900
 categories: [llm, rag, memory]
 tags: [rag, agentic-memory, raw-rag, locomo, longmemeval, meme, memoryagentbench]
 ---
