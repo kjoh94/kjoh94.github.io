@@ -1,12 +1,12 @@
 ---
 layout: post
 title: "샘플링: 다음 토큰을 고르는 규칙"
-date: 2026-11-02 13:00:00 +0900
+date: 2026-10-30 13:00:00 +0900
 categories: [llm, inference]
 tags: [llm, inference, 3brown, sampling, temperature]
 ---
 
-> 시리즈: 토큰이 만들어지는 10가지 장치 · 3/11 · [← 2. 사전 컴파일](/blog/2026/11/01/tokens-02-aot-compilation/) · [0. 프롤로그](/blog/2026/10/30/tokens-00-prologue-prefill-decode/)
+> 시리즈: 토큰이 만들어지는 10가지 장치 · 3/11 · [← 2. 사전 컴파일](/blog/2026/10/30/tokens-02-aot-compilation/) · [0. 프롤로그](/blog/2026/10/30/tokens-00-prologue-prefill-decode/)
 
 > **한 줄 핵심** — 모델은 매 바퀴마다 "다음 토큰 후보 전부의 확률"만 내놓아요. **그중 무엇을 실제로 고를지는 샘플링 규칙**(temperature, top_k, top_p, max_tokens, stop)이 정해요. 같은 모델이라도 이 규칙에 따라 성실한 모범생도, 엉뚱한 시인도 될 수 있어요.
 

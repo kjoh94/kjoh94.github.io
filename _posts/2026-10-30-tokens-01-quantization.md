@@ -1,12 +1,12 @@
 ---
 layout: post
 title: "양자화: 숫자를 얇게 깎아 토큰을 빠르게 만드는 법"
-date: 2026-10-31 11:00:00 +0900
+date: 2026-10-30 11:00:00 +0900
 categories: [llm, inference]
 tags: [llm, inference, 3brown, quantization]
 ---
 
-> 시리즈: 토큰이 만들어지는 10가지 장치 · 1/11 · [← 0. 프롤로그](/blog/2026/10/30/tokens-00-prologue-prefill-decode/) · [2. 사전 컴파일 →](/blog/2026/11/01/tokens-02-aot-compilation/)
+> 시리즈: 토큰이 만들어지는 10가지 장치 · 1/11 · [← 0. 프롤로그](/blog/2026/10/30/tokens-00-prologue-prefill-decode/) · [2. 사전 컴파일 →](/blog/2026/10/30/tokens-02-aot-compilation/)
 
 > **한 줄 핵심** — 양자화는 가중치 하나를 표현하는 비트 수를 줄여(16비트 → 8비트 → 4비트) **모델을 작게 만드는 기술**이에요. Decode는 "가중치를 읽어 오는 속도"에 묶여 있으니, 모델이 작아지면 토큰이 그대로 빨라져요. 대신 너무 깎으면 숫자가 틀리기 시작해요.
 

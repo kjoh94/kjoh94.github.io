@@ -1,12 +1,12 @@
 ---
 layout: post
 title: "사전 컴파일: 칩에 맞춘 번역본을 미리 만들어 두기"
-date: 2026-11-01 12:00:00 +0900
+date: 2026-10-30 12:00:00 +0900
 categories: [llm, inference]
 tags: [llm, inference, 3brown, aot, compile]
 ---
 
-> 시리즈: 토큰이 만들어지는 10가지 장치 · 2/11 · [← 1. 양자화](/blog/2026/10/31/tokens-01-quantization/) · [3. 샘플링 →](/blog/2026/11/02/tokens-03-sampling/)
+> 시리즈: 토큰이 만들어지는 10가지 장치 · 2/11 · [← 1. 양자화](/blog/2026/10/30/tokens-01-quantization/) · [3. 샘플링 →](/blog/2026/10/30/tokens-03-sampling/)
 
 > **한 줄 핵심** — 사전 컴파일(AOT, Ahead-Of-Time)은 범용 모델 그래프를 **특정 칩이 가장 잘 실행하는 형태로 미리 번역해 파일로 저장**해 두는 거예요. 실행할 때는 번역 없이 바로 돌리니 시작이 빠르고, 속도가 예측 가능해져요. 대신 그 번역본은 **그 칩, 그 설정에서만** 통해요.
 
