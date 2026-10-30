@@ -6,7 +6,7 @@ categories: [llm, inference]
 tags: [llm, inference, 3brown, token, prefill, decode]
 ---
 
-> 시리즈: 토큰이 만들어지는 10가지 장치 · 0/11 · [1. 양자화](/blog/2026/10/31/tokens-01-quantization/) · [2. 사전 컴파일](/blog/2026/11/01/tokens-02-aot-compilation/) · [3. 샘플링](/blog/2026/11/02/tokens-03-sampling/)
+> 시리즈: 토큰이 만들어지는 10가지 장치 · 0/11 · [1. 양자화](/blog/2026/10/30/tokens-01-quantization/) · [2. 사전 컴파일](/blog/2026/10/30/tokens-02-aot-compilation/) · [3. 샘플링](/blog/2026/10/30/tokens-03-sampling/)
 
 > **한 줄 핵심** — LLM은 "문장을 이해한 뒤 한꺼번에 쓰는 기계"가 아니에요. **입력을 한 번에 읽고(Prefill), 그다음 토큰을 하나씩 뽑는 일을 반복(Decode)** 하는 기계예요. 이 시리즈의 나머지 아홉 장치는 전부 이 루프의 어딘가에 꽂힙니다.
 
