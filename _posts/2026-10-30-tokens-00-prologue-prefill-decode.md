@@ -6,7 +6,7 @@ categories: [llm, inference]
 tags: [llm, inference, 3brown, token, prefill, decode]
 ---
 
-> 시리즈: 토큰이 만들어지는 10가지 장치 · 0/11 · [1. 양자화](/blog/2026/10/30/tokens-01-quantization/) · [2. 사전 컴파일](/blog/2026/10/30/tokens-02-aot-compilation/) · [3. 샘플링](/blog/2026/10/30/tokens-03-sampling/)
+> 시리즈: 토큰이 만들어지는 10가지 장치 · 0/11 · [1. 양자화](/blog/2026/10/30/tokens-01-quantization/) · [2. 사전 컴파일](/blog/2026/10/30/tokens-02-aot-compilation/) · [3. 샘플링](/blog/2026/10/30/tokens-03-sampling/) · [4. KV 캐시](/blog/2026/10/31/tokens-04-kv-cache/) · [5. Prefix 재사용](/blog/2026/10/31/tokens-05-prefix-caching/) · [6. 연속 배치](/blog/2026/10/31/tokens-06-continuous-batching/) · [7. 청크 Prefill](/blog/2026/10/31/tokens-07-chunked-prefill/) · [8. OpenAI 호환 API](/blog/2026/10/31/tokens-08-openai-compatible-api/) · [9. 스트리밍](/blog/2026/10/31/tokens-09-streaming/) · [10. CPU와 가속기 분담](/blog/2026/10/31/tokens-10-heterogeneous-execution/)
 
 > **한 줄 핵심** — LLM은 "문장을 이해한 뒤 한꺼번에 쓰는 기계"가 아니에요. **입력을 한 번에 읽고(Prefill), 그다음 토큰을 하나씩 뽑는 일을 반복(Decode)** 하는 기계예요. 이 시리즈의 나머지 아홉 장치는 전부 이 루프의 어딘가에 꽂힙니다.
 
@@ -210,15 +210,14 @@ Prefill/Decode를 구분하지 않으면 이런 오해와 실수가 생겨요.
 | 1 | 양자화 | 가중치 자체 | 숫자를 얇게 깎아 메모리를 줄이고 Decode를 빠르게 |
 | 2 | 사전 컴파일 | 루프 시작 전 | 범용 모델을 칩 전용 번역본으로 미리 바꿔 두기 |
 | 3 | 샘플링 | 매 바퀴의 출구 | 확률 분포에서 다음 토큰을 고르는 규칙 |
-| 4 | KV 캐시 | Decode 매 바퀴 | 이미 읽은 토큰의 계산을 다시 하지 않도록 메모 |
-| 5 | 프롬프트(프리픽스) 캐싱 | Prefill | 같은 앞부분은 한 번만 읽기 |
-| 6 | 배칭 / 연속 배칭 | Decode 전체 | 여러 사람의 바퀴를 한 번에 돌리기 |
-| 7 | 페이지드 어텐션 / 메모리 관리 | KV 캐시 저장소 | 캐시를 페이지 단위로 쪼개 낭비 줄이기 |
-| 8 | 투기적 디코딩 | Decode 한 바퀴 | 작은 모델이 미리 쓰고 큰 모델이 검사 |
-| 9 | 구조화 출력 / 제약 디코딩 | 샘플링 직전 | 문법(JSON 등)에 맞는 토큰만 허용 |
-| 10 | 오프로딩·분산 | 하드웨어 배치 | 한 장에 안 들어가는 모델을 나눠 싣기 |
+| 4 | [KV 캐시](/blog/2026/10/31/tokens-04-kv-cache/) | Decode 매 바퀴 | 이미 읽은 토큰의 계산을 다시 하지 않도록 메모 |
+| 5 | [Prefix 재사용](/blog/2026/10/31/tokens-05-prefix-caching/) | Prefill 입구 | 같은 앞부분은 한 번만 읽기 |
+| 6 | [연속 배치](/blog/2026/10/31/tokens-06-continuous-batching/) | Decode 전체 | 여러 사람의 바퀴를 한 번에, 빈자리는 바로 채우기 |
+| 7 | [청크 Prefill](/blog/2026/10/31/tokens-07-chunked-prefill/) | Prefill ↔ Decode 사이 | 긴 입력을 잘라 다른 사람의 Decode 사이에 끼우기 |
+| 8 | [OpenAI 호환 API](/blog/2026/10/31/tokens-08-openai-compatible-api/) | 루프 바깥 현관문 | 표준 규격으로 기존 앱이 그대로 붙게 |
+| 9 | [스트리밍](/blog/2026/10/31/tokens-09-streaming/) | 출구 → 사용자 | 토큰이 나오는 대로 바로 보내기 |
+| 10 | [CPU와 가속기 분담](/blog/2026/10/31/tokens-10-heterogeneous-execution/) | 하드웨어 바닥 | 일을 어디서 할지 나누고 경계 줄이기 |
 
-(순서와 제목은 초안이에요. 연재하면서 바뀔 수 있어요.)
 
 ---
 
