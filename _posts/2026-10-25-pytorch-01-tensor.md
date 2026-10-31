@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "PyTorch 시리즈 1 — Tensor의 정체: storage·stride·view·contiguous·dtype·device"
+title: "PyTorch 시리즈 1 — 텐서 속을 열어 보기: storage·stride·view·contiguous·dtype·device"
 date: 2026-10-25 21:01:00 +0900
 categories: [pytorch, tutorial]
 tags: [pytorch, tensor, stride, view, contiguous, dtype, device, pytorch-series]
@@ -10,13 +10,49 @@ tags: [pytorch, tensor, stride, view, contiguous, dtype, device, pytorch-series]
 > ← 이전: [기초편 C](/blog/2026/10/31/pytorch-00c-loss-train-loop/)  
 > → 다음: [2. nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/)
 
-> **처음이신가요?** 이 장은 텐서의 메모리 내부를 다뤄요. 텐서·신경망이 처음이라면 [기초편 A. 텐서를 숫자 상자로](/blog/2026/10/31/pytorch-00a-tensor-numbers/) → [B. Linear와 순전파](/blog/2026/10/31/pytorch-00b-linear-forward/) → [C. loss와 학습 루프](/blog/2026/10/31/pytorch-00c-loss-train-loop/)를 먼저 읽고 오면 훨씬 쉬워요.
+> **처음이신가요?** 이 장은 기초편 A에서 본 "숫자 상자"의 속을 열어 봐요. 텐서·신경망이 처음이라면 [기초편 A. 텐서를 숫자 상자로](/blog/2026/10/31/pytorch-00a-tensor-numbers/) → [B. Linear와 순전파](/blog/2026/10/31/pytorch-00b-linear-forward/) → [C. loss와 학습 루프](/blog/2026/10/31/pytorch-00c-loss-train-loop/)를 먼저 읽고 오면 훨씬 쉬워요.
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/01-tensor](https://github.com/kjoh94/pytorch-series-examples/tree/main/01-tensor) (`python example.py`)
 
-PyTorch를 오래 써도 `RuntimeError: view size is not compatible with input tensor's size and stride` 같은 에러를 만나면 막막하다. 원인은 거의 항상 하나다. **텐서가 "숫자 상자"가 아니라 "메모리를 읽는 규칙"이라는 것**을 놓쳤기 때문이다. 이 장은 시리즈 전체의 바닥이다. 뒤에 나올 ATen, `torch.compile`, `torch.export`, ONNX, 양자화가 모두 여기서 정의하는 여섯 개 필드(storage, shape, stride, offset, dtype, device)로 이야기한다.
+기초편 A에서 텐서를 "숫자를 담은 상자"로 봤죠. 이번 장은 그 상자를 **한 겹 열어서 안을 들여다보는** 장이에요. 어렵게 들리지만 걱정 마세요. 결론부터 말하면 딱 한 문장이에요.
 
-모든 예제는 CPU 하나로 돌아간다. `pip install torch` 후 그대로 복사해서 실행해 보자.
+> **텐서 = (숫자가 한 줄로 놓인 메모리) + (그걸 어떻게 읽을지 적은 메모)**
+
+이 한 문장만 이해하면, 언젠가 꼭 만나게 될 이런 에러들이 왜 나는지 스스로 풀 수 있어요.
+
+- `RuntimeError: view size is not compatible with input tensor's size and stride`
+- `Expected all tensors to be on the same device`
+- `expected scalar type Float but found Half`
+
+그리고 시리즈 뒤쪽(ATen, `torch.compile`, `torch.export`, 양자화)도 전부 이 장의 단어 여섯 개 — **storage, shape, stride, offset, dtype, device** — 로 이야기해요. 그래서 이 장은 조금 길어도 천천히 가요.
+
+모든 예제는 CPU 하나로 돌아가요. `pip install torch` 하고 그대로 복사해서 실행해 보세요.
+
+### 이 장에서 배우는 것 (미리보기)
+
+| 단어 | 한 줄 뜻 | 비유 |
+|---|---|---|
+| storage | 숫자가 실제로 놓인 한 줄짜리 메모리 | 번호 붙은 사물함 한 줄 |
+| shape | 우리 눈에 보이는 모양 | "2줄 3칸으로 보세요" |
+| stride | 다음 칸으로 가려면 사물함 몇 개 건너뛰나 | 걸음 폭 |
+| offset | 몇 번 사물함부터 읽기 시작하나 | 출발점 |
+| dtype | 숫자 한 개의 종류·크기 | 사물함 하나의 크기 |
+| device | 메모리가 어디(CPU/GPU) 있나 | 사물함이 있는 건물 |
+
+## 0. 먼저 — 컴퓨터 메모리는 "한 줄"이다
+
+![메모리는 한 줄](/assets/img/posts/2026-10-25-pytorch-01-tensor/fig10.jpg)
+
+**그림 0.** 우리는 행렬을 표처럼 생각하지만, 컴퓨터 메모리에는 "행"이나 "열"이 없어요. 그냥 **0번, 1번, 2번… 번호가 붙은 칸이 한 줄로** 있을 뿐이에요. 그래서 2×3 표를 저장하려면 첫 줄 `0 1 2` 뒤에 둘째 줄 `3 4 5`를 이어 붙여요. 이걸 **행 우선(row-major)** 저장이라고 불러요.
+
+그럼 자연스럽게 질문이 생겨요. "한 줄짜리 메모리를 보고 어떻게 다시 2×3 표로 읽지?" — 그 답을 적어 둔 게 바로 다음에 나올 **메모(메타데이터)** 예요.
+
+```python
+import torch
+x = torch.tensor([[0., 1., 2.],
+                  [3., 4., 5.]])
+print(x.flatten())   # tensor([0., 1., 2., 3., 4., 5.])  ← 메모리에 놓인 순서 그대로
+```
 
 ## 1. 텐서는 두 부분으로 되어 있다
 
@@ -39,6 +75,8 @@ print("storage:", x.untyped_storage().nbytes(), "bytes")  # 6 * 4 = 24
 
 핵심 문장 하나만 기억하자. **"텐서 연산의 절반은 숫자를 바꾸지 않고 머리표만 바꾼다."** 이것이 PyTorch가 빠른 이유이자, 헷갈리는 이유다.
 
+> **쉽게 말하면:** 사물함 한 줄 앞에서 "아래 행으로 한 칸" = 3개 건너뛰기, "옆 열로 한 칸" = 1개 건너뛰기. 이 걸음 폭 목록이 stride예요.
+
 ## 2. stride — 다음 칸까지 몇 칸 건너뛰나
 
 ![stride](/assets/img/posts/2026-10-25-pytorch-01-tensor/fig02.jpg)
@@ -58,6 +96,8 @@ print(x.flatten()[flat].item())          # 5.0  (연속 텐서라서 가능)
 ```python
 print(torch.zeros(2, 3, 4).stride())  # (12, 4, 1)
 ```
+
+> **손으로 한 번 계산해 보기:** shape `(2, 3, 4)`에서 `x[1, 2, 3]`은 몇 번 칸일까요? stride가 `(12, 4, 1)`이니 `1*12 + 2*4 + 3*1 = 23`. 실제로 `torch.arange(24.).reshape(2,3,4)[1,2,3]`을 찍어 보면 `23.`이 나와요. 이 계산을 한 번 손으로 해 보면 stride가 확 와닿아요.
 
 ## 3. view — 복사 없이 다른 모양으로 읽기
 
@@ -82,6 +122,8 @@ s = x[1:, 2:]                     # 오른쪽 아래 2×2
 print(s.storage_offset(), s.stride())   # 6 (4, 1)  — 1행*4 + 2열 = 6에서 시작
 print(s.data_ptr() == x.data_ptr() + 6 * x.element_size())  # True
 ```
+
+> **주의 — view는 "같은 사물함을 공유"해요.** 그래서 `y = x.view(...)`를 고치면 `x`도 바뀌어요. 원본을 지키고 싶으면 `x.clone()`으로 진짜 복사본을 만드세요.
 
 ## 4. transpose — stride만 바꾸면 "비연속"이 된다
 
@@ -129,6 +171,36 @@ img = torch.randn(1, 3, 4, 4)
 cl = img.contiguous(memory_format=torch.channels_last)
 print(img.stride(), cl.stride())   # (48, 16, 4, 1) (48, 1, 12, 3)
 ```
+
+### 복사가 생길지 헷갈릴 때
+
+![복사 판단 순서](/assets/img/posts/2026-10-25-pytorch-01-tensor/fig11.jpg)
+
+**그림 5-2.** 대충 이렇게 판단하면 돼요. **값을 새로 계산하는 연산**(`x + 1`, `x * 2`, `torch.relu(x)`)은 결과를 담을 새 메모리가 필요하니 항상 새로 만들어요. **모양이나 읽는 순서만 바꾸는 연산**(`view`, `t`, `permute`, 슬라이싱)은 메모만 바꾸는 공짜 연산이에요. 다만 그 결과가 비연속인데 연속이 꼭 필요한 곳(`view`, 일부 커널)에 넘기면, 그때 `contiguous()`/`reshape`가 복사를 해요.
+
+```python
+x = torch.arange(6.).reshape(2, 3)
+print((x + 1).data_ptr() == x.data_ptr())   # False — 새 메모리
+print(x.t().data_ptr() == x.data_ptr())     # True  — 메모만 바뀜
+```
+
+### 실전 예: 이미지 배치 순서 바꾸기
+
+![NHWC to NCHW](/assets/img/posts/2026-10-25-pytorch-01-tensor/fig13.jpg)
+
+**그림 5-3.** 이미지 라이브러리는 보통 `(높이, 너비, 채널)` 순서로 주고, PyTorch의 `Conv2d`는 `(채널, 높이, 너비)` 순서를 기대해요. 이때 `permute`를 쓰는데, 이건 숫자를 옮기지 않고 stride만 바꿔요. 그래서 결과는 비연속이에요.
+
+```python
+imgs = torch.rand(8, 32, 32, 3)          # N, H, W, C
+chw = imgs.permute(0, 3, 1, 2)           # N, C, H, W
+print(chw.shape, chw.is_contiguous())    # torch.Size([8, 3, 32, 32]) False
+conv = torch.nn.Conv2d(3, 16, 3)
+print(conv(chw).shape)                   # 그대로 넣어도 동작 (내부에서 처리)
+flat = chw.reshape(8, -1)                # view 대신 reshape — 필요하면 알아서 복사
+print(flat.shape)                        # torch.Size([8, 3072])
+```
+
+기초편 B에서 `Linear`에 넣기 전 이미지를 "펴는" 장면이 바로 이 마지막 줄이에요. 여기서 `view`를 쓰면 에러가 나고 `reshape`를 쓰면 되는 이유, 이제 설명할 수 있죠?
 
 ## 6. broadcasting과 stride 0
 
@@ -195,6 +267,35 @@ print(m.shape, m.device)             # 실제 400MB를 할당하지 않는다
 
 `meta` 텐서는 4장(ATen), 7장(export)에서 "숫자 없이 shape만 계산하는" 핵심 도구로 다시 나온다.
 
+## 8-2. 자주 보는 에러 3개와 처방
+
+![에러 처방](/assets/img/posts/2026-10-25-pytorch-01-tensor/fig12.jpg)
+
+**그림 8-2.** 처음 PyTorch를 쓰면 거의 누구나 만나는 에러 셋이에요. 각각 이 장의 단어 하나씩에 대응해요.
+
+```python
+# 1) stride 문제
+x = torch.arange(6.).reshape(2, 3).t()
+# x.view(6)              # 에러!
+print(x.reshape(6))      # OK
+
+# 2) device 문제
+w = torch.randn(3)               # cpu
+# h = w + torch.randn(3, device="cuda")   # GPU가 있으면 에러
+# 처방: 모델과 입력을 같은 곳으로 → model.to(dev); x = x.to(dev)
+
+# 3) dtype 문제
+lin = torch.nn.Linear(3, 1)      # 가중치 float32
+inp = torch.randn(2, 3, dtype=torch.float16)
+try:
+    lin(inp)
+except RuntimeError as e:
+    print("dtype 에러:", str(e)[:60])
+print(lin(inp.float()).dtype)    # 처방: 같은 dtype으로 맞추기 → float32
+```
+
+에러 메시지를 보면 먼저 **"이건 stride·device·dtype 중 뭐지?"** 하고 분류해 보세요. 그것만으로 절반은 풀려요.
+
 ## 9. 정리 — 텐서 해부도
 
 ![해부도](/assets/img/posts/2026-10-25-pytorch-01-tensor/fig09.jpg)
@@ -228,6 +329,13 @@ describe("contig", x.permute(2, 0, 1).contiguous())
 ```
 
 출력에서 `storage`가 같은 줄은 같은 메모리다. **expand 줄(애초에 다른 텐서)과 마지막 contig 줄만 새 메모리**, 즉 실제로 복사가 일어났다**는 것을 확인하자.
+
+### 자주 묻는 질문
+
+- **Q. 그냥 항상 `reshape`만 쓰면 안 되나요?** 대부분 괜찮아요. 다만 `reshape`는 몰래 복사할 수 있어서, "복사 없이 원본을 공유하고 싶다"는 의도가 있을 땐 `view`가 더 정직해요(안 되면 에러로 알려 주니까요).
+- **Q. `contiguous()`는 언제 불러야 하나요?** 평소엔 거의 안 불러도 돼요. 커스텀 C++/CUDA 코드에 넘길 때, `view`가 실패할 때 정도예요.
+- **Q. dtype은 뭘 쓰면 되나요?** 처음엔 기본값 `float32`로 충분해요. 메모리가 부족해지면 그때 bf16/fp16을 고려하세요(10장).
+- **Q. GPU가 없는데 괜찮나요?** 이 시리즈 예제는 전부 CPU로 돌아가요.
 
 ### 퀴즈
 1. `torch.zeros(5, 6)[:, ::2]`의 stride는? (답: `(6, 2)`)
