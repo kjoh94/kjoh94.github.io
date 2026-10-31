@@ -22,7 +22,7 @@ tags: [pytorch, tensor, stride, view, contiguous, dtype, device, pytorch-series]
 
 - `RuntimeError: view size is not compatible with input tensor's size and stride`
 - `Expected all tensors to be on the same device`
-- `expected scalar type Float but found Half`
+- `mat1 and mat2 must have the same dtype, but got Half and Float`
 
 그리고 시리즈 뒤쪽(ATen, `torch.compile`, `torch.export`, 양자화)도 전부 이 장의 단어 여섯 개 — **storage, shape, stride, offset, dtype, device** — 로 이야기해요. 그래서 이 장은 조금 길어도 천천히 가요.
 
