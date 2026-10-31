@@ -1,18 +1,54 @@
 ---
 layout: post
-title: "PyTorch 시리즈 5 — 커스텀 디바이스 백엔드: PrivateUse1으로 새 장치 꽂기"
+title: "PyTorch 시리즈 5 — 내 장치를 PyTorch에 꽂기: PrivateUse1 쉽게 보기"
 date: 2026-10-25 21:05:00 +0900
 categories: [pytorch, tutorial]
 tags: [pytorch, privateuse1, backend, dispatcher, fallback, pytorch-series]
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [4. ATen과 Dispatcher](/blog/2026/10/25/pytorch-04-aten-dispatcher/)  
+> ← 이전: [4. torch.mm 한 줄은 어디로 갈까](/blog/2026/10/25/pytorch-04-aten-dispatcher/)  
 > → 다음: [6. 그래프 캡처 — FX·Dynamo·graph break](/blog/2026/10/25/pytorch-06-graph-capture/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/05-privateuse1](https://github.com/kjoh94/pytorch-series-examples/tree/main/05-privateuse1) (`python example.py`)
 
-4장에서 디스패처 표의 열(column)이 백엔드라는 것을 봤다. 그럼 PyTorch에 없는 새 하드웨어(가속기, 시뮬레이터, 원격 장치…)는 어떻게 그 표에 들어갈까? PyTorch 본체를 고치지 않고 **pip 패키지 하나로** 새 장치를 붙이는 공식 통로가 **PrivateUse1**이다. 이 장은 특정 제품이 아니라, 공개 PyTorch API로 누구나 쓰는 일반 패턴을 다룬다.
+> **처음이신가요?** 이 장은 4장의 "안내 데스크(Dispatcher)와 주방(커널)" 비유를 그대로 이어 가요. 1장의 `device`와 4장을 읽고 오면 충분해요. 평소 PyTorch를 *쓰기만* 한다면 이 장은 "아, 새 장치는 이렇게 붙는구나" 정도로 가볍게 읽어도 괜찮아요.
+
+1장에서 텐서에는 `device` 이름표가 붙는다고 했죠. `"cpu"`, `"cuda"`, `"mps"`… 그럼 PyTorch에 없는 **새 가속기**(새 하드웨어, 시뮬레이터, 원격 장치 등)를 만들었다면 어떻게 `x.to("mydev")`이 되게 할까요?
+
+PyTorch 본체 코드를 고쳐서 다시 빌드해야 할 것 같지만, 아니에요. PyTorch는 처음부터 **"바깥 사람이 쓸 빈 자리"** 를 하나 비워 뒀어요. 그 자리 이름이 **PrivateUse1**이에요. 여기에 내 장치를 채우면 **pip 패키지 하나로** 새 장치가 붙어요. 이 장은 특정 제품이 아니라, 공개 PyTorch API로 누구나 쓰는 일반 패턴을 다뤄요.
+
+## 0. 비유 — 식당에 새 주방 하나 더 열기
+
+![새 주방](/assets/img/posts/2026-10-25-pytorch-05-privateuse1/fig07.jpg)
+
+**그림 0.** 4장의 식당에는 CPU 주방, GPU 주방이 있었어요. 그런데 안내 데스크 표에는 처음부터 **빈 칸 하나(PrivateUse1)** 가 있어요. 우리가 할 일은 그 칸에 "내 가속기 주방"을 차리고 요리법(커널)을 하나씩 채우는 거예요. 메뉴판(op 스키마)은 그대로라서, 사용자는 평소처럼 `torch.mm`, `nn.Linear`를 쓰면 돼요.
+
+## 0-2. 붙이는 순서 — 딱 3단계
+
+![3단계](/assets/img/posts/2026-10-25-pytorch-05-privateuse1/fig08.jpg)
+
+**그림 0-2.** 전체 흐름을 먼저 머리에 넣고 본문을 보면 쉬워요.
+
+1. **이름 붙이기** — 빈 자리 `privateuse1`에 `"mydev"` 같은 이름을 붙여요.
+2. **메모리 다루기** — 그 장치에 텐서를 *만들고*(`empty`), CPU와 *오가게*(`copy_`) 해요. 1장의 storage가 이 장치 메모리에 생기는 거예요.
+3. **계산 채우기** — `add`, `mm`, `relu`… op별 커널을 하나씩 등록해요. 아직 없는 op는 CPU로 대신 계산(fallback)하게 둘 수 있어요.
+
+1단계는 지금 바로 해 볼 수 있어요.
+
+```python
+import torch
+torch.utils.rename_privateuse1_backend("mydev")
+print(torch._C._get_privateuse1_backend_name())   # mydev
+print(torch.device("mydev:0"))                  # 이제 이 이름을 장치로 알아본다
+
+try:
+    torch.empty(2, device="mydev")              # 2단계(메모리)를 아직 안 채웠으니
+except Exception as e:
+    print(type(e).__name__, str(e)[:60])          # → 에러. 주방 간판만 단 상태
+```
+
+> **쉽게 말하면:** 이름만 붙이면 "간판만 단 주방"이에요. 메모리와 커널을 채워야 손님(텐서)을 받을 수 있어요. 아래 본문이 그 채우는 과정이에요.
 
 ## 1. 새 장치를 꽂는 길
 
@@ -170,6 +206,18 @@ f = torch.compile(lambda x: torch.relu(x @ x.T) + 1, backend=my_backend)
 print(f(torch.randn(4, 4)).shape)
 ```
 
+## 자주 묻는 질문
+
+- **Q. 이걸 직접 할 일이 있을까요?** 가속기를 만드는 팀이 아니라면 드물어요. 하지만 새 장치용 PyTorch 패키지를 설치해서 쓸 때 "왜 이 op는 느리지?(fallback)", "왜 이 op는 지원 안 된대?(커널 없음)"를 이해하는 데 도움이 돼요.
+- **Q. fallback이면 결과는 맞나요?** 맞아요. CPU로 옮겨 계산하고 다시 가져오니까요. 대신 이사 비용(1장의 `.to()` 복사) 때문에 느려요.
+- **Q. 모든 op를 다 구현해야 하나요?** 아니요. 실제 모델이 쓰는 op부터 세어 보고(5절) 많이 쓰는 것부터 채워요. 수천 개 중 수십 개면 대부분의 모델이 돌아가요.
+- **Q. 왜 이름이 PrivateUse1이에요?** "PyTorch 본체가 쓰지 않는, 외부 전용 칸 1번"이라는 뜻이에요.
+
+### 퀴즈
+1. 새 장치를 붙일 때 PyTorch 본체를 다시 빌드해야 할까? (답: 아니요, PrivateUse1 + 패키지)
+2. 텐서를 그 장치에 만들려면 최소한 무엇이 필요할까? (답: 메모리 할당 + `empty` + `copy_`)
+3. 커널이 없는 op를 일단 돌게 하는 방법은? (답: CPU fallback)
+
 ## 정리
 
 - **PrivateUse1**은 out-of-tree 장치용 예약 dispatch key. `rename_privateuse1_backend`로 이름을 붙인다.
@@ -181,5 +229,5 @@ print(f(torch.randn(4, 4)).shape)
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [4. ATen과 Dispatcher](/blog/2026/10/25/pytorch-04-aten-dispatcher/)  
+> ← 이전: [4. torch.mm 한 줄은 어디로 갈까](/blog/2026/10/25/pytorch-04-aten-dispatcher/)  
 > → 다음: [6. 그래프 캡처 — FX·Dynamo·graph break](/blog/2026/10/25/pytorch-06-graph-capture/)
