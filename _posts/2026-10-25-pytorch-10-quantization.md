@@ -1,18 +1,81 @@
 ---
 layout: post
-title: "PyTorch 시리즈 10장 — 양자화, PyTorch 쪽에서"
+title: "PyTorch 시리즈 10장 — 숫자를 작게 만들어 모델 줄이기: 양자화 입문"
 date: 2026-10-25 21:10:00 +0900
 categories: [pytorch]
 tags: [pytorch, quantization, int8]
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [9. 컴파일러 최적화 감각 — folding·fusion·메모리](/blog/2026/10/25/pytorch-09-compiler-opt/)  
+> ← 이전: [9. 컴파일러는 무엇을 빠르게 하나](/blog/2026/10/25/pytorch-09-compiler-opt/)  
 > → 다음: [11. LLM 추론을 코드로 — prefill·decode·KV cache](/blog/2026/10/25/pytorch-11-llm-inference/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/10-quantization](https://github.com/kjoh94/pytorch-series-examples/tree/main/10-quantization) (`python example.py`)
 
-모델을 더 작고 빠르게 만드는 가장 강력한 방법은 **숫자를 작게** 만드는 것이다. float32(4바이트)를 int8(1바이트)로 바꾸면 메모리는 1/4, 정수 연산기는 훨씬 싸다. 이 장은 양자화의 수학을 PyTorch 코드로 하나씩 확인한다.
+> **처음이라면 이것만 기억하세요.** 양자화는 모델 안의 숫자를 **더 거친 자(눈금이 256칸뿐인 자)**로 재는 거예요. 조금 부정확해지는 대신 크기는 1/4이 되고, 메모리 왕복이 줄어서 빨라져요. scale, zero_point, weight-only, PTQ 같은 말은 비유부터 보고 갈게요.
+
+[9장](/blog/2026/10/25/pytorch-09-compiler-opt/)에서 "시간은 계산보다 **메모리를 몇 번, 얼마나 훑나**가 정한다"를 실측으로 봤죠. 그렇다면 데이터 자체를 작게 만들면 어떨까요? float32 하나는 4바이트, int8 하나는 1바이트예요. 같은 모델을 int8로 저장하면 메모리에서 꺼내 올 양이 **1/4**로 줄어요. 이게 양자화(quantization)의 출발점이에요. [1장](/blog/2026/10/25/pytorch-01-tensor/)에서 본 dtype 이야기의 연장선이기도 해요.
+
+## 0. 비유로 먼저
+
+### 0-1. 256칸짜리 자에 올리기 = scale과 zero_point
+
+![256칸 자](/assets/img/posts/2026-10-25-pytorch-10-quantization/fig07.jpg)
+
+**그림 7.** int8은 -128부터 127까지, **딱 256개 정수**만 표현할 수 있어요. 그래서 실수들을 256칸짜리 자에 올려야 해요. 이때 정할 건 두 개뿐이에요.
+
+- **scale (눈금 간격):** 한 칸이 실수로 얼마인지. 값이 -1.0~2.5 사이라면 `3.5 / 255 ≈ 0.0137`.
+- **zero_point (0의 위치):** 실수 `0.0`이 자의 몇 번째 눈금에 오는지. 위 예에선 `-55`.
+
+그리고 변환 공식은 이것 하나예요: **실수 = (정수 − zero_point) × scale**.
+
+```python
+import torch
+x = torch.tensor([-1.0, 0.0, 0.3, 2.5])
+scale = (x.max() - x.min()) / 255
+zp = int(torch.round(-x.min() / scale)) - 128
+q = torch.clamp(torch.round(x / scale) + zp, -128, 127).to(torch.int8)
+print(scale.item(), zp, q.tolist())          # 0.01373  -55  [-128, -55, -33, 127]
+print(((q.float() - zp) * scale).tolist())   # [-1.002, 0.0, 0.302, 2.498]
+```
+
+실제로 돌린 결과예요. 되돌린 값이 원래 값과 **0.002 정도**밖에 안 달라요. 그리고 `0.0`은 정확히 `0.0`으로 돌아와요 — zero_point가 있는 이유가 이거예요(0은 패딩, relu 등에서 아주 많이 나오는 값이라 정확해야 해요).
+
+### 0-2. weight-only = 가중치만 압축해서 보관
+
+![weight-only](/assets/img/posts/2026-10-25-pytorch-10-quantization/fig08.jpg)
+
+**그림 8.** 제일 쉬운 양자화는 **가중치만** int8로 저장하고, 계산하기 직전에 float로 펼치는 방법이에요. 옷을 압축팩에 넣어 보관하다가 입을 때 꺼내는 것과 비슷해요. 입력(activation)은 건드리지 않으니 안전해요.
+
+```python
+lin = torch.nn.Linear(256, 256)
+W = lin.weight.data
+s = W.abs().amax(dim=1, keepdim=True) / 127          # 줄(출력 채널)마다 눈금 따로
+Wq = torch.round(W / s).clamp(-127, 127).to(torch.int8)
+print(W.numel() * 4, Wq.numel() + s.numel() * 4)    # 262144 → 66560 바이트
+x = torch.randn(8, 256)
+y_ref = lin(x)
+y_q = x @ (Wq.float() * s).T + lin.bias
+print(((y_ref - y_q).norm() / y_ref.norm()).item()) # 약 0.004 (0.4%)
+```
+
+크기는 **약 1/4**, 출력 오차는 **0.4%** 정도예요. "줄마다 눈금을 따로" 잡는 게 3절의 per-channel이에요. LLM(11장)에서 많이 쓰는 방식이 바로 이 weight-only예요. 메모리에서 꺼내 오는 양이 줄어드니 9장의 감각대로 빨라지죠.
+
+### 0-3. PTQ = 학습 끝난 모델에 샘플 몇 개 흘려 눈금 맞추기
+
+![PTQ](/assets/img/posts/2026-10-25-pytorch-10-quantization/fig09.jpg)
+
+**그림 9.** 가중치는 이미 값이 정해져 있어서 바로 눈금을 잡을 수 있어요. 그런데 **입력(activation)**까지 int8로 하려면, 실행 중에 값이 어느 범위로 나오는지 알아야 하죠. 그래서 학습이 끝난 모델에 **샘플 데이터를 몇 묶음 흘려 보내** 최소·최대를 기록하고, 그걸로 scale과 zero_point를 정해요. 다시 학습하지 않으니 **Post-Training Quantization(PTQ)**이라고 불러요. 이 과정을 보정(calibration)이라고도 해요(2절).
+
+### 0-4. 세 가지 방식 한눈에
+
+| 방식 | 비유 | 무엇을 int8로? | 난이도 |
+|---|---|---|---|
+| weight-only | 압축팩 보관 | 가중치만 | 제일 쉬움 |
+| PTQ (정적) | 샘플로 눈금 맞추기 | 가중치 + activation | 보통 |
+| QAT | 거친 자로 연습하며 재학습 | 가중치 + activation | 어려움, 정확도 최고 |
+
+이제 정식 용어로 하나씩 자세히 볼게요.
 
 ## 1. 양자화 = 실수를 정수 격자에 올리기
 
@@ -133,8 +196,38 @@ print("int8 가중치 출력 상대오차:", ((ref - approx).norm() / ref.norm()
 ```
 
 
+
+## 자주 묻는 질문
+
+**Q. 정확도가 얼마나 떨어지나요?**
+weight-only int8은 보통 거의 티가 안 나요(위 예제 0.4%). activation까지 int8로 하면 모델에 따라 차이가 커서, 꼭 검증 데이터로 확인해야 해요.
+
+**Q. zero_point는 꼭 필요한가요?**
+가중치처럼 0을 중심으로 대칭인 값은 zero_point를 0으로 두는 "대칭 양자화"를 많이 써요(0-2 예제). relu 뒤처럼 한쪽으로 쏠린 값은 zero_point가 있으면 256칸을 더 알뜰하게 써요.
+
+**Q. int4는요?**
+16칸짜리 자예요. 더 작아지지만 오차가 커져서, 보통 작은 묶음(group)마다 scale을 따로 두는 방식과 함께 써요.
+
+**Q. PTQ에 샘플은 몇 개나 필요해요?**
+실제 입력과 비슷한 데이터 수십~수백 개면 보통 충분해요. 너무 다른 데이터로 보정하면 눈금이 어긋나요.
+
+## 퀴즈
+
+1. 실수 → 정수 공식을 거꾸로 쓰면? → 실수 = (정수 − zero_point) × scale.
+2. weight-only 양자화에서 int8이 되는 것은? → 가중치만. activation은 float 그대로.
+3. PTQ에서 샘플 데이터를 흘려 보내는 이유는? → activation의 범위를 재서 scale·zero_point를 정하려고.
+
+
+
+## 정리
+
+- 양자화 = 실수를 256칸 자(int8)에 올리기. 실수 = (정수 − zero_point) × scale.
+- weight-only: 가중치만 int8 → 크기 1/4, 오차 작음.
+- PTQ: 샘플로 activation 범위를 재서 눈금을 정한다. 재학습까지 하면 QAT.
+
+
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [9. 컴파일러 최적화 감각 — folding·fusion·메모리](/blog/2026/10/25/pytorch-09-compiler-opt/)  
+> ← 이전: [9. 컴파일러는 무엇을 빠르게 하나](/blog/2026/10/25/pytorch-09-compiler-opt/)  
 > → 다음: [11. LLM 추론을 코드로 — prefill·decode·KV cache](/blog/2026/10/25/pytorch-11-llm-inference/)
