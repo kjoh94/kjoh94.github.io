@@ -1,18 +1,60 @@
 ---
 layout: post
-title: "PyTorch 시리즈 4 — ATen과 Dispatcher: torch.mm 한 줄이 커널까지 가는 길"
+title: "PyTorch 시리즈 4 — torch.mm 한 줄은 어디로 갈까: ATen과 Dispatcher 쉽게 보기"
 date: 2026-10-25 21:04:00 +0900
 categories: [pytorch, tutorial]
 tags: [pytorch, aten, dispatcher, dispatch-key, meta, pytorch-series]
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [3. Autograd와 추론 모드](/blog/2026/10/25/pytorch-03-autograd/)  
+> ← 이전: [3. 미분은 autograd가 알아서](/blog/2026/10/25/pytorch-03-autograd/)  
 > → 다음: [5. 커스텀 디바이스 백엔드 (PrivateUse1)](/blog/2026/10/25/pytorch-05-privateuse1/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/04-aten-dispatcher](https://github.com/kjoh94/pytorch-series-examples/tree/main/04-aten-dispatcher) (`python example.py`)
 
-같은 `torch.mm(a, b)`가 CPU 텐서면 CPU 행렬곱을, CUDA 텐서면 GPU 행렬곱을 부른다. 누가 고르는 걸까? 답은 **ATen**(PyTorch의 C++ 텐서 연산 라이브러리)과 그 안의 **Dispatcher**(op 이름 → 커널 라우터)다. 5장(새 장치 꽂기), 6–7장(그래프 캡처·export), 12장(커스텀 op)이 모두 이 구조 위에 있으니 시리즈에서 가장 중요한 장이라고 해도 좋다.
+> **처음이신가요?** 기초편 A–C와 1–3장을 읽었다면 준비 끝이에요. 이 장은 "파이썬 한 줄 뒤에서 실제로 계산하는 건 누구냐"를 봐요. 처음 나오는 단어는 쓰기 전에 먼저 풀어 줄게요.
+
+지금까지 우리는 `a @ b`, `torch.mm(a, b)`, `nn.Linear` 같은 걸 그냥 썼어요. 그런데 신기하지 않나요? **똑같은 한 줄**인데 텐서가 CPU에 있으면 CPU가 계산하고, GPU에 있으면 GPU가 계산해요(1장의 device). requires_grad가 켜져 있으면 그래프도 그려 줘요(3장). 이걸 누가 골라 주는 걸까요?
+
+답은 두 단어예요.
+
+- **ATen** — PyTorch 안에 있는 **C++ 연산 모음집**. `mm`, `add`, `relu` 같은 연산(op) 수천 개가 여기 있어요. 파이썬 `torch.*`는 대부분 이걸 부르는 얇은 껍데기예요.
+- **Dispatcher** — ATen 안의 **안내 데스크**. 주문(op 이름)을 받으면 텐서에 붙은 꼬리표를 보고 알맞은 주방(커널)으로 보내요.
+
+> **커널(kernel)이 뭐예요?** 특정 장치에서 특정 연산을 실제로 계산하는 함수예요. "CPU용 행렬곱 함수", "GPU용 행렬곱 함수"가 각각 하나의 커널이에요.
+
+5장(새 장치 꽂기), 6–7장(그래프 캡처·export), 12장(커스텀 op)이 모두 이 구조 위에 있어서, 시리즈에서 가장 중요한 장이라고 해도 좋아요.
+
+## 0. 비유로 먼저 — 같은 주문, 다른 주방
+
+![식당 비유](/assets/img/posts/2026-10-25-pytorch-04-aten-dispatcher/fig08.jpg)
+
+**그림 0.** 식당을 떠올려 보세요. 손님은 메뉴판의 이름("mm 하나요")만 말해요. 안내 데스크(Dispatcher)는 손님의 꼬리표를 보고 "CPU 주방", "GPU 주방", 혹은 5장에서 우리가 직접 만들 "내 장치 주방"으로 주문을 넘겨요. **메뉴 이름은 하나, 요리법은 주방마다 따로** — 이게 이 장의 전부예요.
+
+## 0-2. 한 줄이 내려가는 층
+
+![층](/assets/img/posts/2026-10-25-pytorch-04-aten-dispatcher/fig09.jpg)
+
+**그림 0-2.** 조금 더 정확히 보면, `torch.mm(a, b)`는 파이썬 → C++ 연결(바인딩) → Dispatcher → (필요하면) Autograd 정거장 → 실제 커널 순서로 내려가요. 우리는 맨 위 한 줄만 쓰고, 나머지는 PyTorch가 해요. 3장에서 본 그래프 기록도 사실 이 길 중간의 한 정거장이에요.
+
+### 직접 보기 — profiler로 op 이름 찍어 보기
+
+![profiler](/assets/img/posts/2026-10-25-pytorch-04-aten-dispatcher/fig10.jpg)
+
+**그림 0-3.** 말로만 들으면 와닿지 않으니 직접 확인해 봐요. `torch.profiler`로 감싸면 실제로 불린 ATen op 이름이 나와요. `nn.Linear` 하나가 `aten::linear` → `aten::addmm`(곱하고 더하기) 같은 op로 바뀌는 게 보여요.
+
+```python
+import torch, torch.nn as nn
+x = torch.randn(2, 4)
+lin = nn.Linear(4, 3)
+with torch.profiler.profile() as prof:
+    lin(x)
+print(prof.key_averages().table(row_limit=6))   # aten::linear, aten::addmm, aten::t ...
+```
+
+> **1장과 이어지는 장면:** 표에 `aten::t`, `aten::transpose`, `aten::as_strided`도 보여요. weight를 뒤집는(transpose) 데 숫자를 옮기지 않고 stride만 바꾸는 view 연산 — 1장에서 본 바로 그거예요.
+
+> **쉽게 말하면:** `aten::`이 붙은 이름이 안내 데스크가 아는 "메뉴 이름"이에요. 6·7장의 그래프에도 이 이름들이 그대로 찍혀요.
 
 ## 1. 큰 그림
 
@@ -28,6 +70,8 @@ print(torch.ops.aten.mm.default._schema)     # aten::mm(Tensor self, Tensor mat2
 ```
 
 `torch.ops.aten.*`은 ATen op를 직접 부르는 창구다. 6–7장의 그래프에 찍히는 노드 이름(`aten.mm.default`)이 바로 이것이다.
+
+> **스키마(schema)가 뭐예요?** 메뉴판의 한 줄이에요. "이름은 mm, 텐서 두 개 받고, 텐서 하나 돌려줌." 어느 주방에서 만들든 이 약속은 같아요.
 
 ## 2. 스키마와 커널은 따로다
 
@@ -155,6 +199,18 @@ print(torch._C._dispatch_has_kernel_for_dispatch_key("demo::scale2", "CPU"))
 
 스키마 하나(`define`)와 키별 커널(`impl`) — 그림 2의 구조 그대로다.
 
+## 자주 묻는 질문
+
+- **Q. 이걸 몰라도 PyTorch를 쓸 수 있나요?** 네, 평소엔 몰라도 돼요. 다만 "이 장치에서 이 op가 지원 안 됨"(`NotImplementedError: Could not run 'aten::...' with arguments from the '...' backend`) 같은 에러를 읽거나, 새 장치·커스텀 op를 붙일 때(5·12장) 꼭 필요해요.
+- **Q. 그 에러는 무슨 뜻이에요?** "그 주방에는 그 메뉴 요리법이 없어요"라는 뜻이에요. 그 키로 커널이 등록되지 않은 거예요.
+- **Q. `torch.ops.aten.mm`과 `torch.mm`은 다른가요?** 같은 op예요. 앞의 것은 메뉴 이름으로 직접 부르는 창구예요.
+- **Q. meta 장치는 왜 있어요?** 숫자 계산 없이 "결과 모양만" 알고 싶을 때 쓰는 가짜 주방이에요(7절). 큰 모델 구조 확인, 컴파일러의 모양 추론에 써요.
+
+### 퀴즈
+1. 같은 op가 CPU/GPU에서 다르게 계산되는 건 무엇 덕분인가? (답: 텐서의 dispatch key를 보고 Dispatcher가 커널을 고르기 때문)
+2. `requires_grad=True` 텐서로 `mm`을 부르면 백엔드 커널보다 먼저 들르는 정거장은? (답: Autograd)
+3. 새 장치를 지원하려면 스키마를 바꿔야 하나? (답: 아니요, 그 장치 키로 커널만 등록)
+
 ## 정리
 
 - **ATen** = PyTorch의 C++ op 라이브러리. 각 op는 **스키마 하나 + 백엔드별 커널 여러 개**.
@@ -166,5 +222,5 @@ print(torch._C._dispatch_has_kernel_for_dispatch_key("demo::scale2", "CPU"))
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [3. Autograd와 추론 모드](/blog/2026/10/25/pytorch-03-autograd/)  
+> ← 이전: [3. 미분은 autograd가 알아서](/blog/2026/10/25/pytorch-03-autograd/)  
 > → 다음: [5. 커스텀 디바이스 백엔드 (PrivateUse1)](/blog/2026/10/25/pytorch-05-privateuse1/)
