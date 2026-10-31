@@ -1,18 +1,82 @@
 ---
 layout: post
-title: "PyTorch 시리즈 6장 — 그래프 캡처: FX, Dynamo, torch.compile"
+title: "PyTorch 시리즈 6장 — 파이썬 코드를 그래프로 붙잡기: FX, Dynamo, torch.compile"
 date: 2026-10-25 21:06:00 +0900
 categories: [pytorch]
 tags: [pytorch, torch.compile, dynamo, fx]
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [5. 커스텀 디바이스 백엔드 (PrivateUse1)](/blog/2026/10/25/pytorch-05-privateuse1/)  
+> ← 이전: [5. 내 장치를 PyTorch에 꽂기](/blog/2026/10/25/pytorch-05-privateuse1/)  
 > → 다음: [7. torch.export와 Core ATen IR](/blog/2026/10/25/pytorch-07-torch-export/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/06-graph-capture](https://github.com/kjoh94/pytorch-series-examples/tree/main/06-graph-capture) (`python example.py`)
 
-지금까지의 PyTorch는 **eager 모드**였다. 파이썬이 한 줄을 읽으면 그 즉시 커널 하나가 돈다. 쉽고 디버깅하기 좋지만, 컴파일러 입장에서는 "다음에 무엇이 올지" 모른 채 한 걸음씩 걷는 셈이다. 이 장은 모델을 **그래프로 붙잡는(capture)** 방법을 다룬다. FX → Dynamo → `torch.compile` → 내 백엔드 순서로 간다.
+> **처음이신가요?** 기초편 A–C와 1–4장을 읽었다면 충분해요. 특히 4장의 `aten::` op 이름이 이 장의 그래프에 그대로 나와요. `torch.compile`을 "모델을 빠르게 하는 한 줄"로만 알고 있었다면, 이 장에서 그 한 줄 뒤를 열어 봐요.
+
+지금까지 우리가 쓴 PyTorch는 전부 **eager(즉시 실행) 모드**였어요. 파이썬이 한 줄을 읽으면 그 자리에서 바로 계산해요. `y = x * 2` 하면 곱셈이 바로 돌고, 다음 줄로 넘어가요. 그래서 `print`로 중간값을 찍기도 쉽고, 디버깅도 편해요.
+
+그런데 단점이 있어요. PyTorch 입장에서는 **"다음에 무슨 계산이 올지"를 모른 채** 한 걸음씩 걷는 셈이에요. 다음 줄을 미리 알면 "곱하기와 더하기를 한 번에 해 버리자" 같은 최적화를 할 수 있는데, 그걸 못 하는 거죠.
+
+그래서 이 장의 주제는 **"파이썬 코드를 실행하기 전에(또는 처음 실행할 때) 계산 순서를 통째로 적어 두기"** 예요. 이렇게 적어 둔 계산 순서를 **그래프**라고 불러요. 3장의 계산 그래프와 비슷한 개념이에요.
+
+> **그래프(graph)가 뭐예요?** "어떤 연산이 어떤 순서로, 무엇을 입력으로 쓰는지" 적은 목록이에요. 노드 = 연산(`mul`, `add`, `relu`), 화살표 = 데이터가 흘러가는 길.
+
+## 0. 비유 — 한 줄씩 통역 vs 원고 통째로 번역
+
+![통역 vs 번역](/assets/img/posts/2026-10-25-pytorch-06-graph-capture/fig08.jpg)
+
+**그림 0.** eager는 **동시통역사**예요. 한 문장 들으면 바로 옮겨요. 빠르게 반응하지만 문장들을 합쳐서 더 매끄럽게 다듬을 수는 없어요. 그래프 방식은 **원고를 통째로 받은 번역가**예요. 전체를 먼저 읽고, 겹치는 부분은 합치고, 순서를 정리한 다음 한 번에 내놓아요.
+
+이걸 가장 쉽게 보는 방법은 FX로 함수를 "읽혀" 보는 거예요.
+
+```python
+import torch
+def f(x):
+    return torch.relu(x * 2 + 1)
+
+gm = torch.fx.symbolic_trace(f)
+print(gm.code)
+# def forward(self, x):
+#     mul = x * 2
+#     add = mul + 1
+#     relu = torch.relu(add)
+#     return relu
+```
+
+파이썬 한 줄이 **연산 세 개(mul → add → relu)의 목록**으로 바뀌었어요. 이게 그래프예요. 이제 컴파일러는 "세 개를 한 번에 계산하는 커널 하나로 합치자(fusion)"를 할 수 있어요.
+
+## 0-2. torch.compile 한 줄이 하는 일
+
+![compile 흐름](/assets/img/posts/2026-10-25-pytorch-06-graph-capture/fig09.jpg)
+
+**그림 0-2.** 실전에서는 `symbolic_trace`를 직접 부르기보다 `torch.compile`을 써요. 코드는 한 줄이지만 뒤에서는 이렇게 흘러가요.
+
+1. **Dynamo**가 내 함수를 처음 실행할 때 옆에서 지켜보며, 텐서 연산만 골라 기록해요.
+2. 기록한 걸 **FX 그래프**로 만들어요(위에서 본 그 목록).
+3. **백엔드**(기본은 Inductor)가 그래프를 받아 합치고 정리해서 빠른 코드를 만들어요.
+
+```python
+cf = torch.compile(f)            # 이 줄은 아직 아무것도 안 함
+x = torch.randn(1000)
+print(torch.allclose(cf(x), f(x)))   # 첫 호출 때 캡처+컴파일, 결과는 같다
+```
+
+> **참고:** 기본 백엔드(Inductor)는 CPU에서 C++ 컴파일러(g++ 등)가 필요해요. 없으면 `InvalidCxxCompiler` 에러가 나요. 그럴 땐 공부용으로 `torch.compile(f, backend="aot_eager")`를 쓰면 캡처 과정은 똑같이 보고 실행만 eager로 해요. 예제 저장소도 이 설정으로 돌아가요.
+
+### 왜 첫 호출만 느릴까?
+
+![첫 호출](/assets/img/posts/2026-10-25-pytorch-06-graph-capture/fig10.jpg)
+
+**그림 0-3.** 처음 부를 때는 캡처하고 컴파일하는 시간이 들어서 느려요. 두 번째부터는 만들어 둔 코드를 바로 써서 빨라요. 그래서 벤치마크할 땐 **첫 호출(워밍업)은 빼고** 재야 해요. 그리고 입력 모양이 바뀌면 "이 코드가 아직 맞나?" 확인(guard, 6절)에 걸려 다시 컴파일될 수 있어요.
+
+```python
+import time
+cf = torch.compile(f, backend="aot_eager")
+for i in range(3):
+    t = time.perf_counter(); cf(x)
+    print(f"{i+1}번째 호출: {time.perf_counter() - t:.3f}s")   # 첫 번째만 크다
+```
 
 ## 1. eager vs 그래프
 
@@ -134,6 +198,18 @@ cm = torch.compile(model, backend=my_backend)
 print(cm(torch.randn(3, 4)).shape)
 ```
 
+## 자주 묻는 질문
+
+- **Q. 항상 `torch.compile`을 쓰면 좋나요?** 대부분 학습·추론이 빨라지지만, 첫 호출이 느리고 디버깅이 어려워져요. 먼저 eager로 맞게 만든 다음, 마지막에 붙이세요.
+- **Q. 모델 안에 `print`나 `if`가 있으면요?** 그래프가 거기서 끊길 수 있어요(graph break, 5절). 결과는 맞지만 빨라지는 폭이 줄어요.
+- **Q. 결과가 eager랑 조금 달라요.** 연산을 합치면 소수점 계산 순서가 바뀌어 아주 작은 차이(1e-6 수준)가 날 수 있어요. 정상이에요. 비교할 땐 `torch.allclose`를 쓰세요.
+- **Q. FX, Dynamo, Inductor… 다 알아야 하나요?** 사용자는 `torch.compile`만 알면 돼요. FX는 "그래프 모양", Dynamo는 "그래프 잡는 사람", Inductor는 "그래프로 코드 만드는 사람" 정도로 기억하세요.
+
+### 퀴즈
+1. eager 모드의 장점과 단점 하나씩은? (답: 디버깅 쉬움 / 다음 연산을 몰라 최적화가 어려움)
+2. `torch.compile(model)`을 부른 순간 컴파일될까? (답: 아니요, 첫 호출 때)
+3. 그래프가 끊기는 대표적 원인은? (답: 텐서 값에 따른 파이썬 분기, print 같은 부수효과 등)
+
 ## 정리
 
 - eager는 쉽고, 그래프는 빠르다. 그래프 캡처는 둘 사이의 다리다.
@@ -147,5 +223,5 @@ print(cm(torch.randn(3, 4)).shape)
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [5. 커스텀 디바이스 백엔드 (PrivateUse1)](/blog/2026/10/25/pytorch-05-privateuse1/)  
+> ← 이전: [5. 내 장치를 PyTorch에 꽂기](/blog/2026/10/25/pytorch-05-privateuse1/)  
 > → 다음: [7. torch.export와 Core ATen IR](/blog/2026/10/25/pytorch-07-torch-export/)
