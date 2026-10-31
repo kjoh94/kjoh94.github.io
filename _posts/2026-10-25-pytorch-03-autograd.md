@@ -1,18 +1,53 @@
 ---
 layout: post
-title: "PyTorch 시리즈 3 — Autograd와 추론 모드: eval·no_grad·inference_mode"
+title: "PyTorch 시리즈 3 — 미분은 autograd가 알아서: 학습과 추론 모드(eval·no_grad·inference_mode)"
 date: 2026-10-25 21:03:00 +0900
 categories: [pytorch, tutorial]
 tags: [pytorch, autograd, inference_mode, no_grad, pytorch-series]
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [2. nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/)  
+> ← 이전: [2. 모델은 부품 상자](/blog/2026/10/25/pytorch-02-module-state-dict/)  
 > → 다음: [4. ATen과 Dispatcher](/blog/2026/10/25/pytorch-04-aten-dispatcher/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/03-autograd](https://github.com/kjoh94/pytorch-series-examples/tree/main/03-autograd) (`python example.py`)
 
-학습할 땐 gradient가 필요하고, 추론할 땐 필요 없다. 말은 쉽지만 `model.eval()`, `torch.no_grad()`, `torch.inference_mode()`가 각각 **무엇을** 끄는지 헷갈리는 경우가 많다. 이 장에서는 autograd가 forward 중에 몰래 그리는 그래프를 직접 들여다보고, 추론 모드가 그 그래프와 메모리를 어떻게 아끼는지 본다. 6·7장의 컴파일러가 "AOTAutograd"라는 단계를 두는 이유도 여기서 나온다.
+> **처음이신가요?** 기초편 [C. loss와 학습 루프](/blog/2026/10/31/pytorch-00c-loss-train-loop/)에서 `loss.backward()`를 한 줄 썼죠. 이 장은 그 한 줄 뒤에서 무슨 일이 일어나는지 봐요. 텐서(1장)와 Parameter(2장)를 알면 충분해요.
+
+기초편 C의 학습 루프를 떠올려 볼게요. 우리는 `loss.backward()` 한 줄만 썼는데, 갑자기 모든 Parameter에 `.grad`가 채워졌어요. 미분 공식을 하나도 안 썼는데 말이에요. 이걸 해 주는 게 **autograd(자동 미분)** 예요.
+
+이 장에서는 세 가지를 차근차근 볼게요.
+
+1. **gradient가 뭔지** — 수학 없이 "기울기" 감각으로
+2. **autograd가 어떻게 알아서 미분하는지** — forward 중에 몰래 그리는 "계산 그래프"
+3. **추론할 땐 그걸 어떻게 끄는지** — `model.eval()`, `torch.no_grad()`, `torch.inference_mode()`가 각각 **무엇을** 끄는지
+
+세 번째가 실전에서 제일 헷갈리는 부분이에요. 그리고 6·7장의 컴파일러가 "AOTAutograd"라는 단계를 두는 이유도 여기서 나와요.
+
+## 0. gradient = 지금 위치의 기울기
+
+![기울기](/assets/img/posts/2026-10-25-pytorch-03-autograd/fig07.jpg)
+
+**그림 0.** loss를 언덕이라고 생각해 보세요. 우리는 가장 낮은 곳(loss가 작은 곳)에 가고 싶어요. 지금 서 있는 곳의 **기울기**가 +4라면 "오른쪽으로 가면 올라간다"는 뜻이니 왼쪽으로 가면 돼요. 그래서 기초편 C의 갱신 규칙이 `w ← w − lr × gradient`예요. **gradient는 "이 숫자를 조금 늘리면 loss가 얼마나 변하나"** 를 알려 주는 값일 뿐이에요.
+
+```python
+import torch
+w = torch.tensor(2.0, requires_grad=True)
+loss = w ** 2          # 언덕: loss = w²
+loss.backward()
+print(w.grad)          # tensor(4.) — w=2에서 기울기 4
+with torch.no_grad():
+    w -= 0.1 * w.grad  # 한 걸음 내려가기
+print(w)               # 1.6 — 바닥(0) 쪽으로 이동
+```
+
+> **쉽게 말하면:** 숫자가 수백만 개여도 똑같아요. 숫자마다 "늘리면 loss가 오르나 내리나, 얼마나?"를 하나씩 구한 게 `.grad`예요.
+
+## 0-2. 학습 루프에서 autograd의 자리
+
+![학습 루프](/assets/img/posts/2026-10-25-pytorch-03-autograd/fig08.jpg)
+
+**그림 0-2.** 학습 루프 네 줄 중 **우리가 미분에 관여하는 건 `backward()` 한 줄**뿐이에요. 대신 autograd는 forward(`model(x)`)를 하는 동안 "무슨 계산을 했는지" 기록해 둬요. 그 기록이 있어야 거꾸로 돌아가며 미분할 수 있거든요. 다음 절에서 그 기록 — 계산 그래프 — 을 직접 들여다봐요.
 
 ## 1. forward는 그래프를 그린다
 
@@ -32,6 +67,8 @@ print(L.grad_fn.next_functions)             # 거꾸로 이어진 노드들
 print(x.is_leaf, w.is_leaf, y.is_leaf)      # True True False
 ```
 
+> **용어 정리:** `requires_grad=True`인 텐서 = "미분을 구해 줘" 표시. Parameter는 기본으로 켜져 있어요(2장). **leaf** = 사용자가 직접 만든 텐서(그래프의 시작점), `.grad`는 leaf에만 채워져요.
+
 ## 2. backward는 연쇄법칙을 거꾸로 돈다
 
 ![연쇄법칙](/assets/img/posts/2026-10-25-pytorch-03-autograd/fig02.jpg)
@@ -47,6 +84,8 @@ y = w * x + b; (y ** 2).backward()
 print(w.grad)                # tensor(84.) — 42가 또 더해짐
 w.grad = None                # 또는 optimizer.zero_grad()
 ```
+
+> **가장 흔한 실수 — `zero_grad()` 빼먹기:** `.grad`는 덮어쓰지 않고 **더해져요.** 루프마다 비우지 않으면 gradient가 계속 쌓여서 학습이 엉뚱하게 튀어요. 기초편 C의 루프에 `opt.zero_grad()`가 있던 이유예요.
 
 ## 3. 그래프는 메모리를 먹는다
 
@@ -111,6 +150,25 @@ print(f"no_grad    {bench(torch.no_grad):.3f}s")
 print(f"inference  {bench(torch.inference_mode):.3f}s")
 ```
 
+### 그래서 뭘 쓰면 되나요?
+
+![스위치 고르기](/assets/img/posts/2026-10-25-pytorch-03-autograd/fig09.jpg)
+
+**그림 4-2.** 상황별로 외워 두면 편해요.
+
+```python
+# 학습 중간에 검증
+model.eval()
+with torch.no_grad():
+    val_loss = loss_fn(model(x_val), y_val)
+model.train()          # ← 다시 학습 모드로! 빼먹기 쉬움
+
+# 배포·순수 추론
+model.eval()
+with torch.inference_mode():
+    pred = model(x)
+```
+
 ## 5. inference_mode의 대가
 
 ![inference_mode 제약](/assets/img/posts/2026-10-25-pytorch-03-autograd/fig05.jpg)
@@ -156,6 +214,18 @@ print(torch.autograd.gradcheck(Square.apply, torch.randn(3, dtype=torch.double, 
 
 `autograd.Function`은 12장에서 커스텀 커널에 미분 규칙을 붙일 때 다시 등장한다.
 
+## 자주 묻는 질문
+
+- **Q. `.grad`가 `None`이에요.** ① `backward()`를 아직 안 불렀거나, ② 그 텐서가 `requires_grad=False`거나, ③ leaf가 아닌 중간 텐서예요(중간값이 필요하면 `y.retain_grad()`).
+- **Q. `backward()`를 두 번 부르면 에러가 나요.** 첫 backward가 끝나면 저장된 중간값을 지워요(메모리 절약). 정말 필요하면 `backward(retain_graph=True)`.
+- **Q. Parameter를 직접 고치려니 에러가 나요.** `w -= ...` 같은 직접 수정은 `with torch.no_grad():` 안에서 하세요. 그 수정까지 그래프에 기록되면 안 되니까요.
+- **Q. `.detach()`는 뭐예요?** "같은 숫자(같은 메모리, 1장!)인데 그래프에서 떼어 낸 텐서"예요. 로그 찍기, numpy 변환 전에 써요.
+
+### 퀴즈
+1. `w=3`, `L = w**2`일 때 `w.grad`는? (답: `6`)
+2. `model.eval()`만 하고 `no_grad`를 안 쓰면 그래프가 생길까? (답: 생긴다)
+3. 루프에서 `zero_grad()`를 빼면 두 번째 step의 grad는? (답: 1·2번째 gradient의 합)
+
 ## 정리
 
 - `requires_grad` 텐서에서 시작한 연산은 `grad_fn` 노드를 남겨 그래프를 만든다.
@@ -169,5 +239,5 @@ print(torch.autograd.gradcheck(Square.apply, torch.randn(3, dtype=torch.double, 
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [2. nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/)  
+> ← 이전: [2. 모델은 부품 상자](/blog/2026/10/25/pytorch-02-module-state-dict/)  
 > → 다음: [4. ATen과 Dispatcher](/blog/2026/10/25/pytorch-04-aten-dispatcher/)
