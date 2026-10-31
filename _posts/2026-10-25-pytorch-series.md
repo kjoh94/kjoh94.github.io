@@ -12,7 +12,7 @@ PyTorch를 "쓸 줄 아는" 단계에서 "**안에서 무슨 일이 일어나는
 
 **그림 1.** 시리즈 지도. 왼쪽 **기초(1–3장)**: 텐서·모듈·autograd. 가운데 **내부 구조(4–5장)**: 연산이 커널로 가는 길(ATen·Dispatcher)과, 거기에 새 장치를 꽂는 법. 오른쪽 **그래프와 배포(6–12장)**: 파이썬 코드를 그래프로 잡고(FX·Dynamo·export), 다른 런타임으로 옮기고(ONNX), 최적화·양자화하고, LLM 추론과 커스텀 op까지.
 
-> **처음이라면 기초편부터.** PyTorch를 처음 만지거나 신경망 학습을 직접 돌려 본 적이 없다면, 아래 기초편 A→B→C를 먼저 읽어 주세요. 텐서·Linear·학습 루프를 그림과 작은 예제로 처음부터 설명해요. 1–12장도 같은 눈높이로 더 쉽게 다시 쓰는 중이에요.
+> **처음이라면 기초편부터.** PyTorch를 처음 만지거나 신경망 학습을 직접 돌려 본 적이 없다면, 아래 기초편 A→B→C를 먼저 읽어 주세요. 텐서·Linear·학습 루프를 그림과 작은 예제로 처음부터 설명해요. 1–12장도 모두 같은 눈높이로 — 비유와 그림 먼저, 실제로 돌려 본 예제, FAQ·퀴즈까지 — 쉽게 다시 썼어요.
 
 ## 기초편 (처음 시작하는 분)
 
@@ -26,18 +26,18 @@ PyTorch를 "쓸 줄 아는" 단계에서 "**안에서 무슨 일이 일어나는
 
 | 장 | 제목 | 이것만은 꼭 |
 |---|---|---|
-| 1 | [Tensor의 정체 — storage·stride·view·contiguous·dtype·device](/blog/2026/10/25/pytorch-01-tensor/) | 텐서는 "메모리를 읽는 규칙". 복사가 언제 생기나 |
-| 2 | [nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/) | 파라미터/버퍼, 이름표 사전, 모듈 교체 |
-| 3 | [Autograd와 추론 모드](/blog/2026/10/25/pytorch-03-autograd/) | 계산 그래프, `no_grad`, `inference_mode` |
-| 4 | [ATen과 Dispatcher](/blog/2026/10/25/pytorch-04-aten-dispatcher/) | `torch.mm` 한 줄이 커널까지 가는 길, dispatch key |
-| 5 | [커스텀 디바이스 백엔드 (PrivateUse1)](/blog/2026/10/25/pytorch-05-privateuse1/) | 새 장치를 PyTorch에 등록하는 패턴, CPU fallback |
-| 6 | [그래프 캡처 — FX·Dynamo·graph break·재컴파일](/blog/2026/10/25/pytorch-06-graph-capture/) | `torch.compile`이 파이썬을 잡는 법, guard |
-| 7 | [torch.export와 Core ATen IR](/blog/2026/10/25/pytorch-07-torch-export/) | AOT 그래프, ExportedProgram, TorchScript가 저문 이유 |
-| 8 | [PyTorch → ONNX](/blog/2026/10/25/pytorch-08-onnx/) | opset, dynamic shape, 커스텀 op 매핑 |
-| 9 | [컴파일러 최적화 감각 — folding·fusion·메모리 IO](/blog/2026/10/25/pytorch-09-compiler-opt/) | 왜 "연산 수"보다 "메모리 왕복"이 중요한가 |
-| 10 | [양자화, PyTorch 쪽에서](/blog/2026/10/25/pytorch-10-quantization/) | scale/zero-point, weight-only, PTQ |
-| 11 | [LLM 추론을 코드로 — prefill·decode·KV cache](/blog/2026/10/25/pytorch-11-llm-inference/) | 동적 shape, 정적 캐시 |
-| 12 | [커스텀 op — torch.library와 C++/CUDA extension](/blog/2026/10/25/pytorch-12-custom-ops/) | 내 커널을 컴파일러가 이해하게 등록하기 |
+| 1 | [텐서 속을 열어 보기 — storage·stride·view·dtype·device](/blog/2026/10/25/pytorch-01-tensor/) | 텐서는 "메모리를 읽는 규칙". 복사가 언제 생기나 |
+| 2 | [모델은 부품 상자 — nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/) | 파라미터/버퍼, 이름표 사전, 모듈 교체 |
+| 3 | [미분은 autograd가 알아서 — 학습과 추론 모드](/blog/2026/10/25/pytorch-03-autograd/) | 계산 그래프, `no_grad`, `inference_mode` |
+| 4 | [torch.mm 한 줄은 어디로 갈까 — ATen과 Dispatcher](/blog/2026/10/25/pytorch-04-aten-dispatcher/) | `torch.mm` 한 줄이 커널까지 가는 길, dispatch key |
+| 5 | [내 장치를 PyTorch에 꽂기 — PrivateUse1](/blog/2026/10/25/pytorch-05-privateuse1/) | 새 장치를 PyTorch에 등록하는 패턴, CPU fallback |
+| 6 | [파이썬 코드를 그래프로 붙잡기 — FX·Dynamo·torch.compile](/blog/2026/10/25/pytorch-06-graph-capture/) | `torch.compile`이 파이썬을 잡는 법, guard |
+| 7 | [모델을 미리 통째로 뽑아 두기 — torch.export](/blog/2026/10/25/pytorch-07-torch-export/) | AOT 그래프, ExportedProgram, TorchScript가 저문 이유 |
+| 8 | [어디서나 열리는 모델 파일 만들기 — ONNX](/blog/2026/10/25/pytorch-08-onnx/) | opset, dynamic shape, 커스텀 op 매핑 |
+| 9 | [컴파일러는 무엇을 빠르게 하나 — 미리 계산·합치기·메모리](/blog/2026/10/25/pytorch-09-compiler-opt/) | 왜 "연산 수"보다 "메모리 왕복"이 중요한가 |
+| 10 | [숫자를 작게 만들어 모델 줄이기 — 양자화 입문](/blog/2026/10/25/pytorch-10-quantization/) | scale/zero-point, weight-only, PTQ |
+| 11 | [LLM이 답을 한 단어씩 쓰는 법 — prefill·decode·KV cache](/blog/2026/10/25/pytorch-11-llm-inference/) | 동적 shape, 정적 캐시 |
+| 12 | [내가 만든 연산을 정식 등록하기 — torch.library](/blog/2026/10/25/pytorch-12-custom-ops/) | 내 커널을 컴파일러가 이해하게 등록하기 |
 
 **추천 순서**: 기초편 A → B → C → 1 → 2 → 4 → 5 → 6 → 7 → 8을 먼저. 3·9·10·11·12는 필요할 때.
 
