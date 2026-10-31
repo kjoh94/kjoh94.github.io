@@ -8,7 +8,7 @@ tags: [pytorch, loss, gradient, optimizer, training, beginner, pytorch-series]
 ---
 
 > **PyTorch 시리즈 · 기초편 C/C** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> ← 이전: [기초편 B. Linear와 순전파](/blog/2026/10/31/pytorch-00b-linear-forward/) · → 다음: [1장. Tensor의 정체](/blog/2026/10/25/pytorch-01-tensor/)
+> ← 이전: [기초편 B. Linear와 순전파](/blog/2026/10/31/pytorch-00b-linear-forward/) · → 다음: [1장. 텐서 속을 열어 보기](/blog/2026/10/25/pytorch-01-tensor/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/00c-loss-train-loop](https://github.com/kjoh94/pytorch-series-examples/tree/main/00c-loss-train-loop) (`python example.py`)
 
@@ -283,4 +283,4 @@ print(loss.item(), acc.item())   # loss 약 0.035, 정확도 약 98.5%
 
 여기까지가 기초편이에요. 텐서를 만들고(A), 층으로 계산하고(B), 학습시키는(C) 흐름이 손에 잡혔다면 이제 본편으로 넘어갈 준비가 됐어요. [1장](/blog/2026/10/25/pytorch-01-tensor/)에서는 오늘 "숫자 상자"라고 부른 텐서가 메모리에서 실제로 어떻게 생겼는지 열어 볼게요.
 
-> ← 이전: [기초편 B](/blog/2026/10/31/pytorch-00b-linear-forward/) · → 다음: [1장. Tensor의 정체](/blog/2026/10/25/pytorch-01-tensor/) · [전체 목차](/blog/2026/10/25/pytorch-series/)
+> ← 이전: [기초편 B](/blog/2026/10/31/pytorch-00b-linear-forward/) · → 다음: [1장. 텐서 속을 열어 보기](/blog/2026/10/25/pytorch-01-tensor/) · [전체 목차](/blog/2026/10/25/pytorch-series/)

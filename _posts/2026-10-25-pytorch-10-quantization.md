@@ -8,7 +8,7 @@ tags: [pytorch, quantization, int8]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [9. 컴파일러는 무엇을 빠르게 하나](/blog/2026/10/25/pytorch-09-compiler-opt/)  
-> → 다음: [11. LLM 추론을 코드로 — prefill·decode·KV cache](/blog/2026/10/25/pytorch-11-llm-inference/)
+> → 다음: [11. LLM이 답을 한 단어씩 쓰는 법](/blog/2026/10/25/pytorch-11-llm-inference/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/10-quantization](https://github.com/kjoh94/pytorch-series-examples/tree/main/10-quantization) (`python example.py`)
 
@@ -230,4 +230,4 @@ weight-only int8은 보통 거의 티가 안 나요(위 예제 0.4%). activation
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [9. 컴파일러는 무엇을 빠르게 하나](/blog/2026/10/25/pytorch-09-compiler-opt/)  
-> → 다음: [11. LLM 추론을 코드로 — prefill·decode·KV cache](/blog/2026/10/25/pytorch-11-llm-inference/)
+> → 다음: [11. LLM이 답을 한 단어씩 쓰는 법](/blog/2026/10/25/pytorch-11-llm-inference/)

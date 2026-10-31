@@ -8,5 +8,5 @@ tags: [aten, pytorch]
 
 이 글은 ATen·Dispatcher를 처음 정리했던 초안입니다. 내용은 PyTorch 시리즈 4장으로 다듬어 옮겼습니다.
 
-- [4장: ATen과 Dispatcher](/blog/2026/10/25/pytorch-04-aten-dispatcher/)
+- [4장: torch.mm 한 줄은 어디로 갈까](/blog/2026/10/25/pytorch-04-aten-dispatcher/)
 - [PyTorch 시리즈 목차](/blog/2026/10/25/pytorch-series/)

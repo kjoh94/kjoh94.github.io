@@ -8,7 +8,7 @@ tags: [pytorch, llm, kv-cache]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [10. 숫자를 작게 만들어 모델 줄이기](/blog/2026/10/25/pytorch-10-quantization/)  
-> → 다음: [12. 커스텀 op — torch.library와 extension](/blog/2026/10/25/pytorch-12-custom-ops/)
+> → 다음: [12. 내가 만든 연산을 정식 등록하기](/blog/2026/10/25/pytorch-12-custom-ops/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/11-llm-inference](https://github.com/kjoh94/pytorch-series-examples/tree/main/11-llm-inference) (`python example.py`)
 
@@ -220,4 +220,4 @@ decode는 같은 모양의 작은 계산을 수천 번 반복하니까, 그래�
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [10. 숫자를 작게 만들어 모델 줄이기](/blog/2026/10/25/pytorch-10-quantization/)  
-> → 다음: [12. 커스텀 op — torch.library와 extension](/blog/2026/10/25/pytorch-12-custom-ops/)
+> → 다음: [12. 내가 만든 연산을 정식 등록하기](/blog/2026/10/25/pytorch-12-custom-ops/)

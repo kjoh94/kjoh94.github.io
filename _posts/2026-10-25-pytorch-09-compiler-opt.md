@@ -8,7 +8,7 @@ tags: [pytorch, compiler, fusion]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [8. 어디서나 열리는 모델 파일 만들기](/blog/2026/10/25/pytorch-08-onnx/)  
-> → 다음: [10. 양자화, PyTorch 쪽에서](/blog/2026/10/25/pytorch-10-quantization/)
+> → 다음: [10. 숫자를 작게 만들어 모델 줄이기](/blog/2026/10/25/pytorch-10-quantization/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/09-compiler-opt](https://github.com/kjoh94/pytorch-series-examples/tree/main/09-compiler-opt) (`python example.py`)
 
@@ -226,4 +226,4 @@ print("버퍼 배정:", assign, "→ 버퍼", len(free_at), "개 (텐서", len(l
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [8. 어디서나 열리는 모델 파일 만들기](/blog/2026/10/25/pytorch-08-onnx/)  
-> → 다음: [10. 양자화, PyTorch 쪽에서](/blog/2026/10/25/pytorch-10-quantization/)
+> → 다음: [10. 숫자를 작게 만들어 모델 줄이기](/blog/2026/10/25/pytorch-10-quantization/)

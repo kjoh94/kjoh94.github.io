@@ -8,7 +8,7 @@ tags: [pytorch, aten, dispatcher, dispatch-key, meta, pytorch-series]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [3. 미분은 autograd가 알아서](/blog/2026/10/25/pytorch-03-autograd/)  
-> → 다음: [5. 커스텀 디바이스 백엔드 (PrivateUse1)](/blog/2026/10/25/pytorch-05-privateuse1/)
+> → 다음: [5. 내 장치를 PyTorch에 꽂기](/blog/2026/10/25/pytorch-05-privateuse1/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/04-aten-dispatcher](https://github.com/kjoh94/pytorch-series-examples/tree/main/04-aten-dispatcher) (`python example.py`)
 
@@ -223,4 +223,4 @@ print(torch._C._dispatch_has_kernel_for_dispatch_key("demo::scale2", "CPU"))
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [3. 미분은 autograd가 알아서](/blog/2026/10/25/pytorch-03-autograd/)  
-> → 다음: [5. 커스텀 디바이스 백엔드 (PrivateUse1)](/blog/2026/10/25/pytorch-05-privateuse1/)
+> → 다음: [5. 내 장치를 PyTorch에 꽂기](/blog/2026/10/25/pytorch-05-privateuse1/)

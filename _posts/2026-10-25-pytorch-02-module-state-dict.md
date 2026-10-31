@@ -8,7 +8,7 @@ tags: [pytorch, nn-module, state_dict, parameter, buffer, pytorch-series]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [1. 텐서 속을 열어 보기](/blog/2026/10/25/pytorch-01-tensor/)  
-> → 다음: [3. Autograd와 추론 모드](/blog/2026/10/25/pytorch-03-autograd/)
+> → 다음: [3. 미분은 autograd가 알아서](/blog/2026/10/25/pytorch-03-autograd/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/02-module-state-dict](https://github.com/kjoh94/pytorch-series-examples/tree/main/02-module-state-dict) (`python example.py`)
 
@@ -261,4 +261,4 @@ print(model2.training, model2.block[1].training)   # False False — eval()은 �
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [1. 텐서 속을 열어 보기](/blog/2026/10/25/pytorch-01-tensor/)  
-> → 다음: [3. Autograd와 추론 모드](/blog/2026/10/25/pytorch-03-autograd/)
+> → 다음: [3. 미분은 autograd가 알아서](/blog/2026/10/25/pytorch-03-autograd/)

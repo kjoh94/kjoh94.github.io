@@ -8,7 +8,7 @@ tags: [pytorch, onnx, onnxruntime]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [7. 모델을 미리 통째로 뽑아 두기](/blog/2026/10/25/pytorch-07-torch-export/)  
-> → 다음: [9. 컴파일러 최적화 감각 — folding·fusion·메모리](/blog/2026/10/25/pytorch-09-compiler-opt/)
+> → 다음: [9. 컴파일러는 무엇을 빠르게 하나](/blog/2026/10/25/pytorch-09-compiler-opt/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/08-onnx](https://github.com/kjoh94/pytorch-series-examples/tree/main/08-onnx) (`python example.py`)
 
@@ -204,4 +204,4 @@ PyTorch 안에서만 쓰면 `.pt2`로 충분해요. PyTorch가 없는 곳으로 
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [7. 모델을 미리 통째로 뽑아 두기](/blog/2026/10/25/pytorch-07-torch-export/)  
-> → 다음: [9. 컴파일러 최적화 감각 — folding·fusion·메모리](/blog/2026/10/25/pytorch-09-compiler-opt/)
+> → 다음: [9. 컴파일러는 무엇을 빠르게 하나](/blog/2026/10/25/pytorch-09-compiler-opt/)

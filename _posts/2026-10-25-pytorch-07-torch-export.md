@@ -8,7 +8,7 @@ tags: [pytorch, torch.export, aten]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [6. 파이썬 코드를 그래프로 붙잡기](/blog/2026/10/25/pytorch-06-graph-capture/)  
-> → 다음: [8. PyTorch → ONNX](/blog/2026/10/25/pytorch-08-onnx/)
+> → 다음: [8. 어디서나 열리는 모델 파일 만들기](/blog/2026/10/25/pytorch-08-onnx/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/07-torch-export](https://github.com/kjoh94/pytorch-series-examples/tree/main/07-torch-export) (`python example.py`)
 
@@ -199,4 +199,4 @@ ATen 연산은 수천 개라 받는 쪽이 다 구현하기 힘들어요. 그래
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [6. 파이썬 코드를 그래프로 붙잡기](/blog/2026/10/25/pytorch-06-graph-capture/)  
-> → 다음: [8. PyTorch → ONNX](/blog/2026/10/25/pytorch-08-onnx/)
+> → 다음: [8. 어디서나 열리는 모델 파일 만들기](/blog/2026/10/25/pytorch-08-onnx/)

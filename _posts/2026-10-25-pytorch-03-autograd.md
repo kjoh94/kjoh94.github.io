@@ -8,7 +8,7 @@ tags: [pytorch, autograd, inference_mode, no_grad, pytorch-series]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [2. 모델은 부품 상자](/blog/2026/10/25/pytorch-02-module-state-dict/)  
-> → 다음: [4. ATen과 Dispatcher](/blog/2026/10/25/pytorch-04-aten-dispatcher/)
+> → 다음: [4. torch.mm 한 줄은 어디로 갈까](/blog/2026/10/25/pytorch-04-aten-dispatcher/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/03-autograd](https://github.com/kjoh94/pytorch-series-examples/tree/main/03-autograd) (`python example.py`)
 
@@ -240,4 +240,4 @@ print(torch.autograd.gradcheck(Square.apply, torch.randn(3, dtype=torch.double, 
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [2. 모델은 부품 상자](/blog/2026/10/25/pytorch-02-module-state-dict/)  
-> → 다음: [4. ATen과 Dispatcher](/blog/2026/10/25/pytorch-04-aten-dispatcher/)
+> → 다음: [4. torch.mm 한 줄은 어디로 갈까](/blog/2026/10/25/pytorch-04-aten-dispatcher/)

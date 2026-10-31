@@ -8,7 +8,7 @@ tags: [pytorch, tensor, stride, view, contiguous, dtype, device, pytorch-series]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [기초편 C](/blog/2026/10/31/pytorch-00c-loss-train-loop/)  
-> → 다음: [2. nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/)
+> → 다음: [2. 모델은 부품 상자](/blog/2026/10/25/pytorch-02-module-state-dict/)
 
 > **처음이신가요?** 이 장은 기초편 A에서 본 "숫자 상자"의 속을 열어 봐요. 텐서·신경망이 처음이라면 [기초편 A. 텐서를 숫자 상자로](/blog/2026/10/31/pytorch-00a-tensor-numbers/) → [B. Linear와 순전파](/blog/2026/10/31/pytorch-00b-linear-forward/) → [C. loss와 학습 루프](/blog/2026/10/31/pytorch-00c-loss-train-loop/)를 먼저 읽고 오면 훨씬 쉬워요.
 
@@ -348,4 +348,4 @@ describe("contig", x.permute(2, 0, 1).contiguous())
 ---
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
-> → 다음: [2. nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/)
+> → 다음: [2. 모델은 부품 상자](/blog/2026/10/25/pytorch-02-module-state-dict/)

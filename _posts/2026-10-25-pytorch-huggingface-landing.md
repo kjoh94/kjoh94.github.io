@@ -6,7 +6,7 @@ categories: [ml, huggingface, tutorial]
 tags: [pytorch, huggingface, safetensors, gguf, unsloth, qwen, transformers, onnx]
 ---
 
-> **PyTorch 시리즈 번외편** · [전체 목차](/blog/2026/10/25/pytorch-series/) · 함께 보기: [2. nn.Module과 state_dict](/blog/2026/10/25/pytorch-02-module-state-dict/)
+> **PyTorch 시리즈 번외편** · [전체 목차](/blog/2026/10/25/pytorch-series/) · 함께 보기: [2. 모델은 부품 상자](/blog/2026/10/25/pytorch-02-module-state-dict/)
 
 ### — safetensors, GGUF, Unsloth, 그리고 Qwen 같은 모델이 공개되는 날 벌어지는 일
 

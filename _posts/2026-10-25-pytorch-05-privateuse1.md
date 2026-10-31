@@ -8,7 +8,7 @@ tags: [pytorch, privateuse1, backend, dispatcher, fallback, pytorch-series]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [4. torch.mm 한 줄은 어디로 갈까](/blog/2026/10/25/pytorch-04-aten-dispatcher/)  
-> → 다음: [6. 그래프 캡처 — FX·Dynamo·graph break](/blog/2026/10/25/pytorch-06-graph-capture/)
+> → 다음: [6. 파이썬 코드를 그래프로 붙잡기](/blog/2026/10/25/pytorch-06-graph-capture/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/05-privateuse1](https://github.com/kjoh94/pytorch-series-examples/tree/main/05-privateuse1) (`python example.py`)
 
@@ -230,4 +230,4 @@ print(f(torch.randn(4, 4)).shape)
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [4. torch.mm 한 줄은 어디로 갈까](/blog/2026/10/25/pytorch-04-aten-dispatcher/)  
-> → 다음: [6. 그래프 캡처 — FX·Dynamo·graph break](/blog/2026/10/25/pytorch-06-graph-capture/)
+> → 다음: [6. 파이썬 코드를 그래프로 붙잡기](/blog/2026/10/25/pytorch-06-graph-capture/)

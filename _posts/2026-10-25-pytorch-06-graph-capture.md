@@ -8,7 +8,7 @@ tags: [pytorch, torch.compile, dynamo, fx]
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [5. 내 장치를 PyTorch에 꽂기](/blog/2026/10/25/pytorch-05-privateuse1/)  
-> → 다음: [7. torch.export와 Core ATen IR](/blog/2026/10/25/pytorch-07-torch-export/)
+> → 다음: [7. 모델을 미리 통째로 뽑아 두기](/blog/2026/10/25/pytorch-07-torch-export/)
 
 > 이 글의 예제 코드 전체: [kjoh94/pytorch-series-examples/tree/main/06-graph-capture](https://github.com/kjoh94/pytorch-series-examples/tree/main/06-graph-capture) (`python example.py`)
 
@@ -224,4 +224,4 @@ print(cm(torch.randn(3, 4)).shape)
 
 > **PyTorch 시리즈** · [전체 목차](/blog/2026/10/25/pytorch-series/)  
 > ← 이전: [5. 내 장치를 PyTorch에 꽂기](/blog/2026/10/25/pytorch-05-privateuse1/)  
-> → 다음: [7. torch.export와 Core ATen IR](/blog/2026/10/25/pytorch-07-torch-export/)
+> → 다음: [7. 모델을 미리 통째로 뽑아 두기](/blog/2026/10/25/pytorch-07-torch-export/)
