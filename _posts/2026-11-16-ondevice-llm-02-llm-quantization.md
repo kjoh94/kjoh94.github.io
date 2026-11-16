@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[온디바이스 LLM 2/9] 4비트로 줄이고도 답을 지키는 법: LLM 양자화 실전 (W4A16·W8A8·GPTQ·AWQ·SmoothQuant)"
+title: "2. 4비트로 줄이고도 답을 지키는 법: LLM 양자화 실전 (W4A16·W8A8·GPTQ·AWQ·SmoothQuant)"
 date: 2026-11-16 10:02:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, quantization, gptq, awq, smoothquant, ondevice-llm-series]

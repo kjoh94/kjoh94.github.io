@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[온디바이스 LLM 목차] Roofline부터 MoE·PIM까지 9장"
+title: "온디바이스 LLM 시리즈 — 목차: Roofline부터 MoE·PIM까지 9장"
 date: 2026-11-16 10:00:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, inference, npu, ondevice-llm-series]

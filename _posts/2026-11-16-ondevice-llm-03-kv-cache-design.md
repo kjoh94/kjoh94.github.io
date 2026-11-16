@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[온디바이스 LLM 3/9] 메모장이 가중치보다 커질 때: KV 캐시 설계 (GQA·정적 캐시·KV 양자화·sink)"
+title: "3. 메모장이 가중치보다 커질 때: KV 캐시 설계 (GQA·정적 캐시·KV 양자화·sink)"
 date: 2026-11-16 10:03:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, kv-cache, gqa, streamingllm, kivi, ondevice-llm-series]

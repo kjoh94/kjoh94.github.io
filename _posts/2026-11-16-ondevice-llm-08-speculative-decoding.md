@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[온디바이스 LLM 8/9] 추측해서 한 번에 검증하기: Speculative decoding (수락률·γ·KV 되감기·prompt lookup)"
+title: "8. 추측해서 한 번에 검증하기: Speculative decoding (수락률·γ·KV 되감기·prompt lookup)"
 date: 2026-11-16 10:08:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, speculative-decoding, draft-model, prompt-lookup, ondevice-llm-series]

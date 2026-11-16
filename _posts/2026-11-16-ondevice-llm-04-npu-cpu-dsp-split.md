@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[온디바이스 LLM 4/9] 어떤 연산을 어디서 돌릴까: NPU·CPU·DSP 연산 분할 (Amdahl·경계 비용·비선형 근사)"
+title: "4. 어떤 연산을 어디서 돌릴까: NPU·CPU·DSP 연산 분할 (Amdahl·경계 비용·비선형 근사)"
 date: 2026-11-16 10:04:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, npu, amdahl, softmax, rmsnorm, rope, ondevice-llm-series]

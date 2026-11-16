@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[온디바이스 LLM 9/9] 큰 모델을 작은 대역폭으로: MoE와 메모리 안에서 계산하기(PIM)"
+title: "9. 큰 모델을 작은 대역폭으로: MoE와 메모리 안에서 계산하기(PIM)"
 date: 2026-11-16 10:09:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, moe, mixture-of-experts, pim, processing-in-memory, ondevice-llm-series]
