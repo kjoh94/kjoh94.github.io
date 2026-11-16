@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "온디바이스 LLM 시리즈 1장 — 80 TOPS인데 왜 30 tok/s일까: Roofline과 메모리 대역폭"
+title: "[온디바이스 LLM 1/9] 80 TOPS인데 왜 30 tok/s일까: Roofline과 메모리 대역폭"
 date: 2026-11-16 10:01:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, inference, npu, roofline, memory-bandwidth, ondevice-llm-series]

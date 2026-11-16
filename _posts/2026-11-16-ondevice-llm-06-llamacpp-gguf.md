@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "온디바이스 LLM 시리즈 6장 — llama.cpp와 GGUF 해부: 파일 한 개에 모델이 들어가는 방식 (Q8_0·Q4_0·Q4_K·llama-bench)"
+title: "[온디바이스 LLM 6/9] llama.cpp와 GGUF 해부: 파일 한 개에 모델이 들어가는 방식 (Q8_0·Q4_0·Q4_K·llama-bench)"
 date: 2026-11-16 10:06:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, llama.cpp, gguf, k-quants, llama-bench, ondevice-llm-series]

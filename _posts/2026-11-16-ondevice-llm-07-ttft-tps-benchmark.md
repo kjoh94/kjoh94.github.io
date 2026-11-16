@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "온디바이스 LLM 시리즈 7장 — TTFT·TPS를 제대로 재는 법: 같은 모델이 20 tok/s도 277 tok/s도 되는 이유"
+title: "[온디바이스 LLM 7/9] TTFT·TPS를 제대로 재는 법: 같은 모델이 20 tok/s도 277 tok/s도 되는 이유"
 date: 2026-11-16 10:07:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, benchmark, ttft, tpot, tps, tokenizer, ondevice-llm-series]

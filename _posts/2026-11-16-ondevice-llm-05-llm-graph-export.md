@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "온디바이스 LLM 시리즈 5장 — PyTorch 모델을 NPU용 그래프로: prefill/decode 2그래프 export (torch.export·ONNX·ORT)"
+title: "[온디바이스 LLM 5/9] PyTorch 모델을 NPU용 그래프로: prefill/decode 2그래프 export (torch.export·ONNX·ORT)"
 date: 2026-11-16 10:05:00 +0900
 categories: [llm, on-device]
 tags: [llm, on-device, torch-export, onnx, onnxruntime, static-shape, ondevice-llm-series]
